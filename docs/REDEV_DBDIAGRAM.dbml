@@ -1,0 +1,764 @@
+// ==================================================
+// REDEV CMS - Database Diagram (DBML)
+// Generated from Prisma schema - use with dbdiagram.io
+// ==================================================
+
+Project REDEV_CMS {
+  database_type: 'PostgreSQL'
+  Note: 'UNICEF REDEV CMS - Core + Transaction + Legacy'
+}
+
+// ==================================================
+// USER & AUTH
+// ==================================================
+
+Table uni_user {
+  id int [pk, increment, note: 'PK']
+  email varchar
+  password varchar
+  name varchar
+  role_id int [note: 'FK -> uni_user_role']
+  gender smallint
+  status smallint
+  date_registered datetime
+  date_activated datetime
+  birth_date date
+  picture varchar
+  phone_number varchar
+  address varchar
+  city varchar
+  postal_code varchar
+  region varchar
+  log_attempts int
+  log_timeout int
+  meta_data text
+  log_change int
+  lang varchar
+  ip_signup varchar
+  Note: 'CMS users & auth'
+}
+
+Table uni_user_role {
+  id int [pk, increment]
+  title varchar
+  name varchar
+  group_name varchar
+  permissions text
+  reports text
+  Note: 'Role definition'
+}
+
+Table uni_user_logged_token {
+  id bigint [pk, increment]
+  user_id int [not null, ref: > uni_user.id]
+  token varchar
+  logged_from varchar
+  user_agent varchar
+  date_logged datetime
+  date_last_visit datetime
+  ip_logged varchar
+  ip_last_visit varchar
+  expires datetime
+  Note: 'Active sessions'
+}
+
+Table uni_user_password_history {
+  id int [pk, increment]
+  user_id int [not null, ref: > uni_user.id]
+  old_password_hash varchar
+  change_at datetime
+}
+
+Table uni_user_reqtoken {
+  id int [pk, increment]
+  auth_type int
+  auth_token varchar
+  user_id int [ref: > uni_user.id]
+  date_created datetime
+  date_expired datetime
+  ip_address varchar
+  attempts int
+  user_agent varchar
+  request_data text
+  Note: 'Preview tokens, reset tokens, etc.'
+}
+
+// ==================================================
+// ROLE & PERMISSION V2
+// ==================================================
+
+Table uni_permissions_v2 {
+  id int [pk, increment]
+  module varchar
+  action varchar
+  Note: 'Permission definitions'
+}
+
+Table uni_role_permissions_v2 {
+  role_id int [ref: > uni_user_role.id]
+  permission_id int [ref: > uni_permissions_v2.id]
+  Note: 'Role-Permission mapping'
+}
+
+Table uni_role_history {
+  id int [pk, increment]
+  user_id int [ref: > uni_user.id]
+  role_id int [ref: > uni_user_role.id]
+  action varchar
+  change_by int [ref: > uni_user.id]
+  change_at datetime
+}
+
+Table uni_user_roles_v2 {
+  user_id int [ref: > uni_user.id]
+  role_id int [ref: > uni_user_role.id]
+  Note: 'User-Role mapping (v2)'
+}
+
+// ==================================================
+// CMS / CONTENT - PAGES & DONATIONS
+// ==================================================
+
+Table uni_page {
+  id bigint [pk, increment]
+  title varchar
+  slug varchar
+  words text
+  body text [note: 'JSON blocks']
+  description text
+  keywords varchar
+  author_id int [ref: > uni_user.id]
+  date_published datetime
+  date_created datetime
+  date_modified datetime
+  type smallint
+  status smallint
+  picture varchar
+  mobile_picture varchar
+  ecert_template varchar
+  ecert_text text
+  ecert_filename varchar
+  modifier_id int [ref: > uni_user.id]
+  meta_data text
+  template varchar
+  Note: 'CMS pages (block-based)'
+}
+
+Table uni_page_edits {
+  page_id bigint [ref: > uni_page.id]
+  user_id int [ref: > uni_user.id]
+  is_active smallint
+  last_active_at int
+  Note: 'Concurrent edit tracking'
+}
+
+Table uni_donation {
+  id int [pk, increment]
+  donate_type smallint
+  title varchar
+  slug varchar
+  description varchar
+  keywords varchar
+  body text
+  body_one_off text
+  author_id int [ref: > uni_user.id]
+  modifier_id int [ref: > uni_user.id]
+  date_created datetime
+  date_published datetime
+  date_unpublished datetime
+  date_inactive datetime
+  date_modified datetime
+  status smallint
+  special_tag smallint
+  special_tags varchar
+  campaign_type smallint
+  used_for_ads smallint
+  featured smallint
+  picture varchar
+  mobile_picture varchar
+  ecert_monthly varchar
+  ecert_one_off varchar
+  thumbnail varchar
+  thankyou_picture varchar
+  monthly_params text
+  oneoff_params text
+  template varchar
+  wid_date_start datetime
+  wid_date_end datetime
+  wid_params text
+  wid_picture varchar
+  meta_data text
+  access_roles text
+  Note: 'Donation campaigns (articles)'
+}
+
+Table uni_donation_edits {
+  article_id int [ref: > uni_donation.id]
+  user_id int [ref: > uni_user.id]
+  is_active smallint
+  last_active_at int
+}
+
+Table uni_donation_tag {
+  id int [pk, increment]
+  slug varchar
+  title varchar
+}
+
+Table uni_tag {
+  id int [pk, increment]
+  slug varchar
+  title varchar
+  owner smallint
+}
+
+// ==================================================
+// DATA COLLECTION (FAQ, BANKS, LOCATION, SUPPORT, TESTIMONY)
+// ==================================================
+
+Table uni_data_faq {
+  id int [pk]
+  parent int [ref: > uni_data_faq.id]
+  slug varchar
+  title varchar
+  picture varchar
+  answer text
+  status smallint
+  author_id int [ref: > uni_user.id]
+  modifier_id int [ref: > uni_user.id]
+  description varchar
+  keywords varchar
+  meta_data text
+  date_created datetime
+  date_modified datetime
+  Note: 'FAQ tree'
+}
+
+Table uni_data_bank {
+  id int [pk, increment]
+  title varchar
+  currency varchar
+  description text
+  picture varchar
+  status smallint
+  ordering int
+  author_id int [ref: > uni_user.id]
+  date_created datetime
+}
+
+Table uni_data_location {
+  id int [pk, increment]
+  title text
+  address text
+  date_start date
+  date_end date
+  status int
+  author_id int [ref: > uni_user.id]
+  date_created datetime
+}
+
+Table uni_data_subscriber {
+  id bigint [pk, increment]
+  name varchar
+  email varchar
+  phone varchar
+  date_created datetime
+}
+
+Table uni_data_support {
+  id int [pk, increment]
+  title varchar
+  description text
+  picture varchar
+  status smallint
+  author_id int [ref: > uni_user.id]
+  date_created datetime
+}
+
+Table uni_data_testimony {
+  id int [pk, increment]
+  name varchar
+  title varchar
+  description text
+  picture varchar
+  status smallint
+  author_id int [ref: > uni_user.id]
+  date_created datetime
+}
+
+// ==================================================
+// MEDIA & MENU
+// ==================================================
+
+Table uni_media {
+  id bigint [pk, increment]
+  parent bigint [ref: > uni_media.id]
+  name varchar
+  title varchar
+  caption text
+  description text
+  extension varchar
+  file_size int
+  media_type varchar
+  author_id int [ref: > uni_user.id]
+  date_posted datetime
+  ordering int
+  status smallint
+  meta_data text
+  labels text
+}
+
+Table uni_menu {
+  id int [pk, increment]
+  parent int [ref: > uni_menu.id]
+  group_name varchar
+  title varchar
+  href varchar
+  target varchar
+  svg_icon text
+  status smallint
+  ordering int
+  author_id int [ref: > uni_user.id]
+  modifier_id int [ref: > uni_user.id]
+  date_created datetime
+  date_modified datetime
+  Note: 'Navigation menus (tree)'
+}
+
+// ==================================================
+// PLACEHOLDER & METADATA (APPEARANCES / SETTINGS)
+// ==================================================
+
+Table uni_placeholder {
+  id int [pk, increment]
+  name varchar
+  type smallint
+  content text
+  status smallint
+  author_id int [ref: > uni_user.id]
+  modifier_id int [ref: > uni_user.id]
+  date_created datetime
+  date_modified datetime
+  Note: 'Template placeholders, email template content'
+}
+
+Table uni_metadata {
+  id int [pk, increment]
+  scope varchar
+  meta_key varchar
+  meta_value text
+  site varchar
+  status smallint
+  Note: 'Key-value settings (general, mailer, media, etc.)'
+}
+
+Table uni_click_wa_bubble {
+  id int [pk, increment]
+  user_agent text
+  page_title varchar
+  total_click int [default: 0]
+  date_created datetime
+  updated_at datetime
+  Note: 'WhatsApp bubble click tracking (Settings)'
+}
+
+// ==================================================
+// PAYMENT CHANNEL
+// ==================================================
+
+Table uni_payment_channel {
+  id int [pk, increment]
+  parent int
+  title varchar
+  name varchar
+  code varchar
+  phone_required smallint
+  payment_type smallint
+  payment_gateway varchar
+  status smallint
+  ordering int
+}
+
+// ==================================================
+// TRANSACTION CORE (refId = business key)
+// ==================================================
+
+Table uni_transaction {
+  id bigint [pk, increment]
+  ref_id varchar [unique, note: 'Business key']
+  user_id int [ref: > uni_user.id]
+  article_id int [ref: > uni_donation.id]
+  campaign_type int
+  donate_type smallint
+  payment_type int
+  payment_channel_id int [ref: > uni_payment_channel.id]
+  payment_gateway varchar
+  amount bigint
+  first_name varchar
+  last_name varchar
+  email varchar
+  phone varchar
+  address text
+  status smallint
+  reg_status smallint
+  reg_paid_channel int
+  reg_paid_at datetime
+  gift_status smallint
+  date_created datetime
+  last_updated datetime
+  user_agent varchar
+  ip_address varchar
+  is_mobile smallint
+  utm_source varchar
+  utm_medium varchar
+  utm_content varchar
+  utm_campaign varchar
+  utm_term varchar
+  words text
+  meta_data text
+  legacy_id int
+  trash int
+  mail_status smallint
+  paid_channel int
+  last_paid_at datetime
+  bad_request int
+  flag int
+  salesforce int
+  consent varchar
+  modifier_id smallint
+  last_modified datetime
+  next_schedule_at datetime
+  salesforce_retries smallint
+  failed_message varchar
+  Note: 'Core transaction (donation reg)'
+}
+
+Table uni_transaction_paid {
+  id bigint [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  response_id bigint [ref: > uni_transaction_response.id]
+  payment_type int
+  payment_channel_id int [ref: > uni_payment_channel.id]
+  payment_gateway varchar
+  amount bigint
+  paid_valid smallint
+  paid_amount bigint
+  donate_type smallint
+  status smallint
+  invoice_id varchar
+  invoice_date datetime
+  paid_at datetime
+  date_created datetime
+  cycle_number int
+  flag int
+  salesforce_retries smallint
+  is_weekly smallint
+  failed_message varchar
+}
+
+Table uni_transaction_response {
+  id bigint [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  response_ref_id varchar
+  status varchar
+  date_created datetime
+  response_type smallint
+  callback_slug varchar
+  payment_gateway varchar
+  response_text text
+  flag int
+  payload text
+  Note: 'Payment gateway callbacks'
+}
+
+Table uni_transaction_weekly {
+  id bigint [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  paid_id bigint [ref: > uni_transaction_paid.id]
+  type varchar
+  payment_gateway varchar
+  invoice_id varchar
+  invoice_date datetime
+  paid_amount bigint
+  last_paid_at datetime
+  date_created datetime
+}
+
+Table uni_transaction_paymentlink {
+  id bigint [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  invoice_id varchar
+  external_id varchar
+  payment_link_url varchar
+  issued_date datetime
+  paid_at datetime
+  amount bigint
+  status smallint
+}
+
+// ==================================================
+// LOGGING & MONITORING
+// ==================================================
+
+Table uni_log_activity {
+  id bigint [pk, increment]
+  data_id varchar
+  user_id int [ref: > uni_user.id]
+  data_before text
+  data_after text
+  date_created datetime
+  feature varchar
+  action varchar
+  ip_address varchar
+  Note: 'Audit log (Tools & Monitoring)'
+}
+
+Table uni_mail_sent {
+  id int [pk, increment]
+  mail_subject varchar
+  mail_from varchar
+  mail_to varchar
+  mail_body text
+  mail_date datetime
+  Note: 'Sent items (Tools & Monitoring)'
+}
+
+// ==================================================
+// DOWNLOAD & E-CERT
+// ==================================================
+
+Table uni_download_log {
+  id bigint [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  article_id int [ref: > uni_donation.id]
+  status smallint
+  user_agent varchar
+  ip_address varchar
+  is_mobile smallint
+  attempted_at datetime
+  failed_message varchar
+  Note: 'E-cert download log'
+}
+
+Table uni_download_utm_ecertif_log {
+  id bigint [pk, increment]
+  name varchar
+  amount bigint
+  status smallint
+  is_mobile smallint
+  attempted_at datetime
+  failed_message varchar
+  Note: 'UTM / dynamic e-cert download log'
+}
+
+Table uni_custom_ecert {
+  id int [pk]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  donor_name varchar
+  donation_amount bigint
+  donation_type varchar
+  campaign varchar
+  text_setup text
+  date_created datetime
+  generated_by int [ref: > uni_user.id]
+  Note: 'Custom e-certificate'
+}
+
+// ==================================================
+// SALESFORCE & PAYMENT HELPERS
+// ==================================================
+
+Table uni_gopay_retries {
+  id int [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  order_id varchar
+  cycles int
+  last_update datetime
+}
+
+Table uni_salesforce_paymentlink {
+  id bigint [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  invoice_id varchar
+  invoice_link varchar
+  invoice_date datetime
+  date_created datetime
+  has_sent smallint
+}
+
+Table uni_salesforce_response {
+  id int [pk, increment]
+  salesforce_id varchar
+  status varchar
+  type varchar
+  message text
+  contact_id varchar
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  response_text text
+  payload text
+  status_payment smallint
+  date_created datetime
+  Note: 'Salesforce API responses'
+}
+
+Table uni_xendit_reminder_payment_link {
+  id bigint [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  external_id varchar
+  invoice_id varchar
+  amount bigint
+  invoice_url varchar
+  type varchar
+  attempt_retry int
+  expiry_date datetime
+  date_created datetime
+  has_sent smallint
+}
+
+Table uni_z_shorten_link {
+  id int [pk, increment]
+  ref_id varchar [ref: > uni_transaction.ref_id]
+  token varchar
+  username varchar
+}
+
+// ==================================================
+// LEGACY / WEB CALLBACKS (optional in diagram)
+// ==================================================
+
+Table web_doku_rcrreg_notify {
+  id int [pk, increment]
+  statustype varchar
+  message varchar
+  errorcode varchar
+  billnumber varchar
+  status varchar
+  cardnumber varchar
+  mallid varchar
+  words varchar
+  customerid varchar
+  chainmerchant varchar
+  created_at datetime
+}
+
+Table web_midtrans_callback {
+  id int [pk, increment]
+  campaign_id varchar
+  invoice_id varchar
+  order_id varchar
+  merchant_id varchar
+  transaction_id varchar
+  transaction_status varchar
+  transaction_time datetime
+  settlement_time datetime
+  currency varchar
+  gross_amount varchar
+  payment_type varchar
+  fraud_status varchar
+  status_code varchar
+  status_message varchar
+  created_at datetime
+  updated_at datetime
+  email_transfer_notif int
+  email_init_notif int
+  email_rcrreg_notif int
+  email_rcr_notif int
+}
+
+Table web_transaction {
+  id int [pk, increment]
+  article_id int
+  trans_id_merchant varchar
+  bill_number varchar
+  transaction_id varchar
+  transaction_user text
+  transaction_type varchar
+  transaction_amount varchar
+  transaction_date datetime
+  transaction_via varchar
+  transaction_bank varchar
+  transaction_status varchar
+  user_name_title varchar
+  user_name varchar
+  user_email varchar
+  user_phone varchar
+  user_address text
+  user_ip_address text
+  utm_source varchar
+  utm_medium varchar
+  utm_content varchar
+  utm_campaign varchar
+  utm_term varchar
+  email_transfer_notif int
+  email_init_notif int
+  email_rcrreg_notif int
+  email_success_notif int
+  card_type varchar
+  is_delete int
+  is_pause int
+  is_gimmick int
+}
+
+Table web_xendit_callback {
+  id int [pk, increment]
+  invoice_id varchar
+  external_id varchar
+  user_id varchar
+  recurring_payment_id varchar
+  merchant varchar
+  email varchar
+  description varchar
+  currency varchar
+  amount varchar
+  fees_paid_amount varchar
+  adjusted_received_amount varchar
+  paid_amount varchar
+  status varchar
+  bank_code varchar
+  outlet_name varchar
+  ewallet_type varchar
+  credit_card varchar
+  on_demand varchar
+  recurring_id varchar
+  payment_method varchar
+  payment_channel varchar
+  payment_destination varchar
+  paid_at datetime
+  created_at datetime
+  updated_at datetime
+  email_transfer_notif int
+  email_init_notif int
+  email_rcrreg_notif int
+}
+
+Table web_xendit_recurring {
+  id int [pk, increment]
+  payment_method_id varchar
+  external_id varchar
+  user_id varchar
+  email varchar
+  description varchar
+  amount varchar
+  status varchar
+  invoice_duration varchar
+  invoice_url varchar
+  recurring_id varchar
+  recurring_interval varchar
+  recurring_count varchar
+  recurring_recharge varchar
+  recurring_progress varchar
+  recurring_expire varchar
+  started_at datetime
+  created_at datetime
+  updated_at datetime
+}
+
+// ==================================================
+// USER PERMISSION (legacy naming, if still used)
+// ==================================================
+
+Table uni_user_permission {
+  id int [pk, increment]
+  name varchar
+  title varchar
+}

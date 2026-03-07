@@ -1,0 +1,1207 @@
+{
+  "info": {
+    "_postman_id": "unicef-redev-poc-v1",
+    "name": "UNICEF Redev POC",
+    "description": "Complete API collection for UNICEF Redev POC — CMS, Donor Portal, Payment (Midtrans Sandbox).\n\nBase URL: http://localhost:3002\n\nDefault credentials:\n- Email: admin@unicef.org\n- Password: password123",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3002" },
+    { "key": "accessToken", "value": "" },
+    { "key": "userId", "value": "1" },
+    { "key": "pageId", "value": "1" },
+    { "key": "articleId", "value": "1" },
+    { "key": "mediaId", "value": "1" },
+    { "key": "menuId", "value": "1" },
+    { "key": "tagId", "value": "1" },
+    { "key": "roleId", "value": "1" },
+    { "key": "refId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', res.accessToken);",
+                  "  pm.collectionVariables.set('userId', String(res.user.id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@unicef.org\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@test.com\",\n  \"password\": \"password123\",\n  \"name\": \"Test User\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/profile", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "profile"] }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Admin\",\n  \"phoneNumber\": \"081234567890\",\n  \"address\": \"Jl. Sudirman No. 1\",\n  \"city\": \"Jakarta\",\n  \"postalCode\": \"12345\",\n  \"region\": \"DKI Jakarta\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/profile", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "profile"] }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@unicef.org\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "forgot-password"] }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"PASTE_RESET_TOKEN_HERE\",\n  \"password\": \"newpassword123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "reset-password"] }
+          }
+        },
+        {
+          "name": "Google OAuth (open in browser)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/google", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "google"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users?search=&status=1&limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "users"],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Count Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/count", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "count"] }
+          }
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"editor@unicef.org\",\n  \"password\": \"password123\",\n  \"name\": \"Content Editor\",\n  \"roleId\": 1,\n  \"status\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/users", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users"] }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@unicef.org\",\n  \"status\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Delete User (soft)",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Assign Role to User",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/users/{{userId}}/role", "host": ["{{baseUrl}}"], "path": ["api", "v1", "users", "{{userId}}", "role"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "List Roles",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/roles", "host": ["{{baseUrl}}"], "path": ["api", "v1", "roles"] }
+          }
+        },
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "roles", "{{roleId}}"] }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Content Manager\",\n  \"name\": \"content-manager\",\n  \"groupName\": \"content\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/roles", "host": ["{{baseUrl}}"], "path": ["api", "v1", "roles"] }
+          }
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Content Manager\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "roles", "{{roleId}}"] }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "roles", "{{roleId}}"] }
+          }
+        },
+        {
+          "name": "Assign Permissions to Role",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissionIds\": [1, 2, 3, 4, 5]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/roles/{{roleId}}/permissions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "roles", "{{roleId}}", "permissions"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "List Permissions (grouped)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/permissions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "permissions"] }
+          }
+        },
+        {
+          "name": "Create Permission",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"module\": \"donations\",\n  \"action\": \"export\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/permissions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "permissions"] }
+          }
+        },
+        {
+          "name": "Delete Permission",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/permissions/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "permissions", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pages",
+      "item": [
+        {
+          "name": "List Pages",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pages?search=&status=&limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pages"],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Page by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/{{pageId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "{{pageId}}"] }
+          }
+        },
+        {
+          "name": "Get Page by Slug",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/by-slug/about-us", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "by-slug", "about-us"] }
+          }
+        },
+        {
+          "name": "Create Page",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"About Us\",\n  \"slug\": \"about-us\",\n  \"description\": \"About UNICEF Indonesia\",\n  \"keywords\": \"about,unicef,indonesia\",\n  \"body\": \"[]\",\n  \"status\": 0\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/pages", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages"] }
+          }
+        },
+        {
+          "name": "Update Page",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated About Us\",\n  \"body\": \"[{\\\"type\\\":\\\"EditorHeading\\\",\\\"props\\\":{\\\"text\\\":\\\"Welcome\\\",\\\"level\\\":\\\"h1\\\"}}]\",\n  \"status\": 1,\n  \"customCss\": \"h1 { color: #00AEEF; }\",\n  \"customJs\": \"console.log('page loaded');\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/{{pageId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "{{pageId}}"] }
+          }
+        },
+        {
+          "name": "Duplicate Page",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/{{pageId}}/duplicate", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "{{pageId}}", "duplicate"] }
+          }
+        },
+        {
+          "name": "Publish Page",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/{{pageId}}/publish", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "{{pageId}}", "publish"] }
+          }
+        },
+        {
+          "name": "Unpublish Page",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/{{pageId}}/unpublish", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "{{pageId}}", "unpublish"] }
+          }
+        },
+        {
+          "name": "Delete Page",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/{{pageId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "{{pageId}}"] }
+          }
+        },
+        {
+          "name": "Generate Preview Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expiresInMinutes\": 60\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/{{pageId}}/preview", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "{{pageId}}", "preview"] }
+          }
+        },
+        {
+          "name": "Get Page Versions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/pages/{{pageId}}/versions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "pages", "{{pageId}}", "versions"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donations (Articles)",
+      "item": [
+        {
+          "name": "List Articles",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/donations", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donations"] }
+          }
+        },
+        {
+          "name": "Get Article by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/donations/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donations", "{{articleId}}"] }
+          }
+        },
+        {
+          "name": "Create Article",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Help Children Access Education\",\n  \"slug\": \"help-children-education\",\n  \"description\": \"Campaign for children's education\",\n  \"body\": \"[{\\\"type\\\":\\\"EditorHeading\\\",\\\"props\\\":{\\\"text\\\":\\\"Every Child Deserves Education\\\",\\\"level\\\":\\\"h1\\\"}}]\",\n  \"status\": 0,\n  \"donateType\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/donations", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donations"] }
+          }
+        },
+        {
+          "name": "Update Article",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Campaign Title\",\n  \"status\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/donations/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donations", "{{articleId}}"] }
+          }
+        },
+        {
+          "name": "Delete Article",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/donations/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donations", "{{articleId}}"] }
+          }
+        },
+        {
+          "name": "Get Article Versions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/donations/{{articleId}}/versions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donations", "{{articleId}}", "versions"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "item": [
+        {
+          "name": "List Media",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/media?search=&mediaType=image&limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "media"],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "mediaType", "value": "image" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Media by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/media/{{mediaId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "media", "{{mediaId}}"] }
+          }
+        },
+        {
+          "name": "Upload Media",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/media/upload", "host": ["{{baseUrl}}"], "path": ["api", "v1", "media", "upload"] }
+          }
+        },
+        {
+          "name": "Embed Video",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://www.youtube.com/watch?v=dQw4w9WgXcQ\",\n  \"title\": \"UNICEF Campaign Video\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/media/embed", "host": ["{{baseUrl}}"], "path": ["api", "v1", "media", "embed"] }
+          }
+        },
+        {
+          "name": "Crop Image",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"x\": 0,\n  \"y\": 0,\n  \"width\": 400,\n  \"height\": 300\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/media/{{mediaId}}/crop", "host": ["{{baseUrl}}"], "path": ["api", "v1", "media", "{{mediaId}}", "crop"] }
+          }
+        },
+        {
+          "name": "Update Media",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Image Title\",\n  \"description\": \"A beautiful landscape photo\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/media/{{mediaId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "media", "{{mediaId}}"] }
+          }
+        },
+        {
+          "name": "Download Media",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/media/{{mediaId}}/download", "host": ["{{baseUrl}}"], "path": ["api", "v1", "media", "{{mediaId}}", "download"] }
+          }
+        },
+        {
+          "name": "Delete Media",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/media/{{mediaId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "media", "{{mediaId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menus",
+      "item": [
+        {
+          "name": "List Menus (hierarchical)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/menus?search=&status=1&groupName=main",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "menus"],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "1" },
+                { "key": "groupName", "value": "main" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Menus (flat)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/menus/flat", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus", "flat"] }
+          }
+        },
+        {
+          "name": "Get Public Menus",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/menus/public?group=main",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "menus", "public"],
+              "query": [{ "key": "group", "value": "main" }]
+            }
+          }
+        },
+        {
+          "name": "Get Menu by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/menus/{{menuId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus", "{{menuId}}"] }
+          }
+        },
+        {
+          "name": "Create Menu",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"About UNICEF\",\n  \"slug\": \"about-unicef\",\n  \"url\": \"/about-unicef\",\n  \"parentId\": 0,\n  \"groupName\": \"main\",\n  \"status\": 1,\n  \"ordering\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/menus", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus"] }
+          }
+        },
+        {
+          "name": "Update Menu",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Menu Title\",\n  \"status\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/menus/{{menuId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus", "{{menuId}}"] }
+          }
+        },
+        {
+          "name": "Reorder Menus",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"id\": 1, \"ordering\": 1 },\n    { \"id\": 2, \"ordering\": 2 },\n    { \"id\": 3, \"ordering\": 3 }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/menus/reorder", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus", "reorder"] }
+          }
+        },
+        {
+          "name": "Bulk Publish Menus",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [1, 2, 3]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/menus/bulk/publish", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus", "bulk", "publish"] }
+          }
+        },
+        {
+          "name": "Bulk Unpublish Menus",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [1, 2, 3]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/menus/bulk/unpublish", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus", "bulk", "unpublish"] }
+          }
+        },
+        {
+          "name": "Bulk Delete Menus",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ids\": [4, 5]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/menus/bulk/delete", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus", "bulk", "delete"] }
+          }
+        },
+        {
+          "name": "Delete Menu",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/menus/{{menuId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "menus", "{{menuId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tags",
+      "item": [
+        {
+          "name": "List Tags",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/tags", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tags"] }
+          }
+        },
+        {
+          "name": "Get Tag by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/tags/{{tagId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tags", "{{tagId}}"] }
+          }
+        },
+        {
+          "name": "Get Media by Tag",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/tags/{{tagId}}/media", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tags", "{{tagId}}", "media"] }
+          }
+        },
+        {
+          "name": "Create Tag",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Environment\",\n  \"slug\": \"environment\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/tags", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tags"] }
+          }
+        },
+        {
+          "name": "Assign Tags to Media",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tagIds\": [1, 2]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/tags/media/{{mediaId}}/assign", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tags", "media", "{{mediaId}}", "assign"] }
+          }
+        },
+        {
+          "name": "Remove Tags from Media",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tagIds\": [1]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/tags/media/{{mediaId}}/remove", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tags", "media", "{{mediaId}}", "remove"] }
+          }
+        },
+        {
+          "name": "Update Tag",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Tag Title\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/tags/{{tagId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tags", "{{tagId}}"] }
+          }
+        },
+        {
+          "name": "Delete Tag",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/tags/{{tagId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tags", "{{tagId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logos",
+      "item": [
+        {
+          "name": "List Logos",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/logos", "host": ["{{baseUrl}}"], "path": ["api", "v1", "logos"] }
+          }
+        },
+        {
+          "name": "Upload Logo",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "language", "value": "en", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/logos/upload", "host": ["{{baseUrl}}"], "path": ["api", "v1", "logos", "upload"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get All Settings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/settings", "host": ["{{baseUrl}}"], "path": ["api", "v1", "settings"] }
+          }
+        },
+        {
+          "name": "Get System Info",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/settings/system-info", "host": ["{{baseUrl}}"], "path": ["api", "v1", "settings", "system-info"] }
+          }
+        },
+        {
+          "name": "Get Media Settings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/settings/media", "host": ["{{baseUrl}}"], "path": ["api", "v1", "settings", "media"] }
+          }
+        },
+        {
+          "name": "Get Settings by Scope",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/settings/general", "host": ["{{baseUrl}}"], "path": ["api", "v1", "settings", "general"] }
+          }
+        },
+        {
+          "name": "Update Settings",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settings\": [\n    { \"scope\": \"general\", \"key\": \"site_name\", \"value\": \"UNICEF Indonesia\" },\n    { \"scope\": \"general\", \"key\": \"site_description\", \"value\": \"For every child\" },\n    { \"scope\": \"general\", \"key\": \"site_keywords\", \"value\": \"unicef,children,indonesia\" },\n    { \"scope\": \"media\", \"key\": \"max_upload_size\", \"value\": \"10485760\" },\n    { \"scope\": \"media\", \"key\": \"thumbnail_width\", \"value\": \"150\" },\n    { \"scope\": \"media\", \"key\": \"thumbnail_height\", \"value\": \"150\" },\n    { \"scope\": \"media\", \"key\": \"medium_width\", \"value\": \"800\" },\n    { \"scope\": \"media\", \"key\": \"medium_height\", \"value\": \"600\" }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/settings", "host": ["{{baseUrl}}"], "path": ["api", "v1", "settings"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Charge (BCA Bank Transfer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.refId) {",
+                  "  pm.collectionVariables.set('refId', res.refId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 250000,\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@test.com\",\n  \"phone\": \"081234567890\",\n  \"paymentMethod\": \"bank_transfer\",\n  \"bankCode\": \"bca\",\n  \"campaignType\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/payments/charge", "host": ["{{baseUrl}}"], "path": ["api", "v1", "payments", "charge"] }
+          }
+        },
+        {
+          "name": "Charge (GoPay)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100000,\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"email\": \"jane@test.com\",\n  \"phone\": \"081234567890\",\n  \"paymentMethod\": \"gopay\",\n  \"campaignType\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/payments/charge", "host": ["{{baseUrl}}"], "path": ["api", "v1", "payments", "charge"] }
+          }
+        },
+        {
+          "name": "Charge (Monthly BNI)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 500000,\n  \"firstName\": \"Monthly\",\n  \"lastName\": \"Donor\",\n  \"email\": \"monthly@test.com\",\n  \"phone\": \"081234567890\",\n  \"paymentMethod\": \"bank_transfer\",\n  \"bankCode\": \"bni\",\n  \"campaignType\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/payments/charge", "host": ["{{baseUrl}}"], "path": ["api", "v1", "payments", "charge"] }
+          }
+        },
+        {
+          "name": "Check Payment Status",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/payments/status/{{refId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "payments", "status", "{{refId}}"] }
+          }
+        },
+        {
+          "name": "Cancel Payment",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/payments/cancel/{{refId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "payments", "cancel", "{{refId}}"] }
+          }
+        },
+        {
+          "name": "Midtrans Notification (webhook)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_status\": \"settlement\",\n  \"order_id\": \"PASTE_ORDER_ID\",\n  \"status_code\": \"200\",\n  \"gross_amount\": \"250000.00\",\n  \"signature_key\": \"PASTE_SIGNATURE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/payments/notification", "host": ["{{baseUrl}}"], "path": ["api", "v1", "payments", "notification"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions?search=&status=&campaignType=&dateFrom=&dateTo=&limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "status", "value": "" },
+                { "key": "campaignType", "value": "" },
+                { "key": "dateFrom", "value": "" },
+                { "key": "dateTo", "value": "" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Transaction Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions/stats", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "stats"] }
+          }
+        },
+        {
+          "name": "Count Transactions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions/count", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "count"] }
+          }
+        },
+        {
+          "name": "Get Transactions by User",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions/user/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "user", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Get Transaction by RefId",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/transactions/{{refId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "transactions", "{{refId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Donor Portal",
+      "item": [
+        {
+          "name": "Get Donor Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/donor/profile", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donor", "profile"] }
+          }
+        },
+        {
+          "name": "Update Donor Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Donor Name\",\n  \"phoneNumber\": \"081234567890\",\n  \"address\": \"Jl. Gatot Subroto\",\n  \"city\": \"Jakarta\",\n  \"postalCode\": \"12345\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/donor/profile", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donor", "profile"] }
+          }
+        },
+        {
+          "name": "Get Donor Donations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/donor/donations?status=&dateFrom=&dateTo=&limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "donor", "donations"],
+              "query": [
+                { "key": "status", "value": "" },
+                { "key": "dateFrom", "value": "" },
+                { "key": "dateTo", "value": "" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Donor Donation Detail",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/donor/donations/{{refId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donor", "donations", "{{refId}}"] }
+          }
+        },
+        {
+          "name": "Get Donor Subscriptions",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/donor/subscriptions", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donor", "subscriptions"] }
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/v1/donor/subscriptions/{{refId}}/cancel", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donor", "subscriptions", "{{refId}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Get Donor Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/donor/stats", "host": ["{{baseUrl}}"], "path": ["api", "v1", "donor", "stats"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content Blocks",
+      "item": [
+        {
+          "name": "List Content Blocks",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/content-blocks", "host": ["{{baseUrl}}"], "path": ["api", "v1", "content-blocks"] }
+          }
+        },
+        {
+          "name": "Get Content Block by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/content-blocks/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "content-blocks", "1"] }
+          }
+        },
+        {
+          "name": "Create Content Block",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hero Template\",\n  \"type\": \"EditorHero\",\n  \"body\": \"{\\\"title\\\":\\\"Welcome to UNICEF\\\",\\\"subtitle\\\":\\\"For Every Child\\\",\\\"backgroundImage\\\":\\\"https://example.com/hero.jpg\\\"}\",\n  \"authorId\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/content-blocks", "host": ["{{baseUrl}}"], "path": ["api", "v1", "content-blocks"] }
+          }
+        },
+        {
+          "name": "Update Content Block",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Hero Template\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/v1/content-blocks/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "content-blocks", "1"] }
+          }
+        },
+        {
+          "name": "Delete Content Block",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/v1/content-blocks/1", "host": ["{{baseUrl}}"], "path": ["api", "v1", "content-blocks", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Log Activity",
+      "item": [
+        {
+          "name": "List Log Activities",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/log-activity?feature=&action=&userId=&dateFrom=&dateTo=&limit=20&offset=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "log-activity"],
+              "query": [
+                { "key": "feature", "value": "" },
+                { "key": "action", "value": "" },
+                { "key": "userId", "value": "" },
+                { "key": "dateFrom", "value": "" },
+                { "key": "dateTo", "value": "" },
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Count Log Activities",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/log-activity/count", "host": ["{{baseUrl}}"], "path": ["api", "v1", "log-activity", "count"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content / SEO",
+      "item": [
+        {
+          "name": "Get Sitemap XML",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/content/sitemap.xml?baseUrl=https://unicef.org",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "content", "sitemap.xml"],
+              "query": [{ "key": "baseUrl", "value": "https://unicef.org" }]
+            }
+          }
+        },
+        {
+          "name": "Get Robots.txt",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/v1/content/robots.txt", "host": ["{{baseUrl}}"], "path": ["api", "v1", "content", "robots.txt"] }
+          }
+        },
+        {
+          "name": "Get Page Preview by Token",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/content/preview?token=PASTE_PREVIEW_TOKEN",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "content", "preview"],
+              "query": [{ "key": "token", "value": "PASTE_PREVIEW_TOKEN" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Export Report PDF",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/export/pdf?dateFrom=2026-01-01&dateTo=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "export", "pdf"],
+              "query": [
+                { "key": "dateFrom", "value": "2026-01-01" },
+                { "key": "dateTo", "value": "2026-12-31" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Report Excel",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/reports/export/excel?dateFrom=2026-01-01&dateTo=2026-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "reports", "export", "excel"],
+              "query": [
+                { "key": "dateFrom", "value": "2026-01-01" },
+                { "key": "dateTo", "value": "2026-12-31" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

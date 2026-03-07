@@ -1,0 +1,1268 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/////////////////////////////////////////////////
+// USER & AUTH
+/////////////////////////////////////////////////
+
+model UniUser {
+  id             Int      @id @default(autoincrement())
+  email          String?
+  password       String?
+  name           String?
+  roleId         Int?
+  gender         Int?
+  status         Int?
+  dateRegistered DateTime?
+  dateActivated  DateTime?
+  birthDate      DateTime?
+  picture        String?
+  phoneNumber    String?
+  address        String?
+  city           String?
+  postalCode     String?
+  region         String?
+  logAttempts    Int?
+  logTimeout     Int?
+  metaData       String?
+  logChange      Int?
+  lang           String?
+  ipSignup       String?
+
+  role           UniUserRole? @relation(fields: [roleId], references: [id])
+
+  loggedTokens   UniUserLoggedToken[]
+  passwordLogs   UniUserPasswordHistory[]
+  reqTokens      UniUserReqtoken[]
+  roleHistory    UniRoleHistory[] @relation("UserRole")
+  roleChangedBy  UniRoleHistory[] @relation("ChangedBy")
+  transactions   UniTransaction[]
+  donationsAuthored UniDonation[] @relation("DonationAuthor")
+  donationsModified UniDonation[] @relation("DonationModifier")
+  donationEdits  UniDonationEdits[] @relation("DonationEdits")
+  faqsAuthored   UniDataFaq[] @relation("FaqAuthor")
+  faqsModified   UniDataFaq[] @relation("FaqModifier")
+  banksAuthored  UniDataBank[] @relation("BankAuthor")
+  locationsAuthored UniDataLocation[] @relation("LocationAuthor")
+  supportsAuthored UniDataSupport[] @relation("SupportAuthor")
+  testimoniesAuthored UniDataTestimony[] @relation("TestimonyAuthor")
+  pagesAuthored  UniPage[] @relation("PageAuthor")
+  pagesModified  UniPage[] @relation("PageModifier")
+  pageEdits      UniPageEdits[] @relation("PageEdits")
+  pageVersions   UniPageVersion[] @relation("PageVersionAuthor")
+  donationVersions UniDonationVersion[] @relation("DonationVersionAuthor")
+  placeholdersAuthored UniPlaceholder[] @relation("PlaceholderAuthor")
+  placeholdersModified UniPlaceholder[] @relation("PlaceholderModifier")
+  mediasAuthored UniMedia[] @relation("MediaAuthor")
+  menusAuthored  UniMenu[] @relation("MenuAuthor")
+  menusModified  UniMenu[] @relation("MenuModifier")
+  logActivities  UniLogActivity[] @relation("LogActivity")
+  generatedEcerts UniCustomEcert[] @relation("EcertGenerator")
+  userRolesV2    UniUserRolesV2[] @relation("UserRolesV2")
+  donorAddresses    RedevDonorAddress[]
+  donorPaymentMethods RedevDonorPaymentMethod[]
+  consentHistory    RedevConsentHistory[]
+  supportTickets    RedevSupportTicket[]
+  donorInterests    RedevDonorInterest[]
+  userAuthMethods   RedevUserAuthMethod[]
+  refundRequestsAsUser RedevRefundRequest[] @relation("RefundRequestUser")
+  refundReviews     RedevRefundRequest[] @relation("RefundReviewer")
+  contentComments   RedevContentComment[]
+  personalizedLinks RedevPersonalizedLink[]
+
+  @@map("uni_user")
+}
+
+model UniUserRole {
+  id        Int    @id @default(autoincrement())
+  title     String?
+  name      String?
+  groupName String?
+  permissions String?
+  reports   String?
+
+  users        UniUser[]
+  rolePerms    UniRolePermissionsV2[]
+  roleHistory  UniRoleHistory[]
+  userRolesV2  UniUserRolesV2[] @relation("UserRolesV2")
+
+  @@map("uni_user_role")
+}
+
+model UniUserLoggedToken {
+  id           BigInt   @id @default(autoincrement())
+  userId       Int
+  token        String?
+  loggedFrom   String?
+  userAgent    String?
+  dateLogged   DateTime?
+  dateLastVisit DateTime?
+  ipLogged     String?
+  ipLastVisit  String?
+  expires      DateTime?
+
+  user         UniUser @relation(fields: [userId], references: [id])
+
+  @@map("uni_user_logged_token")
+}
+
+model UniUserPasswordHistory {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  oldPasswordHash String?
+  changeAt        DateTime?
+
+  user            UniUser @relation(fields: [userId], references: [id])
+
+  @@map("uni_user_password_history")
+}
+
+model UniUserReqtoken {
+  id          Int      @id @default(autoincrement())
+  authType    Int?
+  authToken   String?
+  userId      Int?
+  dateCreated DateTime?
+  dateExpired DateTime?
+  ipAddress   String?
+  attempts    Int?
+  userAgent   String?
+  requestData String?
+
+  user        UniUser? @relation(fields: [userId], references: [id])
+
+  @@map("uni_user_reqtoken")
+}
+
+/////////////////////////////////////////////////
+// ROLE & PERMISSION
+/////////////////////////////////////////////////
+
+model UniPermissionsV2 {
+  id     Int    @id @default(autoincrement())
+  module String?
+  action String?
+
+  roles  UniRolePermissionsV2[]
+
+  @@map("uni_permissions_v2")
+}
+
+model UniRolePermissionsV2 {
+  roleId       Int
+  permissionId Int
+
+  role         UniUserRole      @relation(fields: [roleId], references: [id])
+  permission   UniPermissionsV2 @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@map("uni_role_permissions_v2")
+}
+
+model UniRoleHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  roleId    Int?
+  action    String?
+  changeBy  Int?
+  changeAt  DateTime?
+
+  user      UniUser?     @relation("UserRole", fields: [userId], references: [id])
+  role      UniUserRole? @relation(fields: [roleId], references: [id])
+  changer   UniUser?     @relation("ChangedBy", fields: [changeBy], references: [id])
+
+  @@map("uni_role_history")
+}
+
+/////////////////////////////////////////////////
+// CMS / CONTENT
+/////////////////////////////////////////////////
+
+model UniDonation {
+  id               Int       @id @default(autoincrement())
+  donateType       Int?
+  title            String?
+  slug             String?
+  description      String?
+  keywords         String?
+  body             String?
+  bodyOneOff       String?
+  authorId         Int?
+  modifierId       Int?
+  dateCreated      DateTime?
+  datePublished    DateTime?
+  dateUnpublished  DateTime?
+  dateInactive     DateTime?
+  dateModified     DateTime?
+  status           Int?
+  specialTag       Int?
+  specialTags      String?
+  campaignType     Int?
+  usedForAds       Int?
+  featured         Int?
+  picture          String?
+  mobilePicture    String?
+  ecertMonthly     String?
+  ecertOneOff      String?
+  thumbnail        String?
+  thankyouPicture  String?
+  monthlyParams    String?
+  oneoffParams     String?
+  template         String?
+  widDateStart     DateTime?
+  widDateEnd       DateTime?
+  widParams        String?
+  widPicture       String?
+  metaData         String?
+  accessRoles      String?
+
+  author      UniUser? @relation("DonationAuthor", fields: [authorId], references: [id])
+  modifier    UniUser? @relation("DonationModifier", fields: [modifierId], references: [id])
+  transactions UniTransaction[] @relation("DonationTransactions")
+  edits       UniDonationEdits[] @relation("DonationEdits")
+  versions    UniDonationVersion[] @relation("DonationVersions")
+  downloadLogs UniDownloadLog[]
+  contentComments RedevContentComment[] @relation("CommentOnDonation")
+
+  @@map("uni_donation")
+}
+
+model UniDonationEdits {
+  articleId    Int
+  userId       Int
+  isActive     Int?
+  lastActiveAt Int?
+
+  article      UniDonation @relation("DonationEdits", fields: [articleId], references: [id])
+  user         UniUser @relation("DonationEdits", fields: [userId], references: [id])
+
+  @@id([articleId, userId])
+  @@map("uni_donation_edits")
+}
+
+model UniDonationVersion {
+  id         BigInt   @id @default(autoincrement())
+  donationId Int
+  title      String?
+  body       String?  // JSON snapshot
+  version    Int
+  authorId   Int?
+  createdAt  DateTime @default(now())
+
+  donation   UniDonation @relation("DonationVersions", fields: [donationId], references: [id], onDelete: Cascade)
+  author     UniUser?    @relation("DonationVersionAuthor", fields: [authorId], references: [id])
+
+  @@map("uni_donation_version")
+}
+
+model UniDonationTag {
+  id    Int     @id @default(autoincrement())
+  slug  String?
+  title String?
+
+  @@map("uni_donation_tag")
+}
+
+model UniTag {
+  id    Int     @id @default(autoincrement())
+  slug  String?
+  title String?
+  owner Int?
+
+  @@map("uni_tag")
+}
+
+model UniDataFaq {
+  id          Int      @id
+  parent      Int?
+  slug        String?
+  title       String?
+  picture     String?
+  answer      String?
+  status      Int?
+  authorId    Int?
+  modifierId  Int?
+  description String?
+  keywords    String?
+  metaData    String?
+  dateCreated DateTime?
+  dateModified DateTime?
+
+  parentFaq   UniDataFaq? @relation("FaqTree", fields: [parent], references: [id])
+  children    UniDataFaq[] @relation("FaqTree")
+  author      UniUser? @relation("FaqAuthor", fields: [authorId], references: [id])
+  modifier    UniUser? @relation("FaqModifier", fields: [modifierId], references: [id])
+
+  @@map("uni_data_faq")
+}
+
+model UniDataBank {
+  id          Int      @id @default(autoincrement())
+  title       String?
+  currency    String?
+  description String?
+  picture     String?
+  status      Int?
+  ordering    Int?
+  authorId    Int?
+  dateCreated DateTime?
+
+  author      UniUser? @relation("BankAuthor", fields: [authorId], references: [id])
+
+  @@map("uni_data_bank")
+}
+
+model UniDataLocation {
+  id          Int      @id @default(autoincrement())
+  title       String?
+  address     String?
+  dateStart   DateTime?
+  dateEnd     DateTime?
+  status      Int?
+  authorId    Int?
+  dateCreated DateTime?
+
+  author      UniUser? @relation("LocationAuthor", fields: [authorId], references: [id])
+
+  @@map("uni_data_location")
+}
+
+model UniDataSubscriber {
+  id          BigInt   @id @default(autoincrement())
+  name        String?
+  email       String?
+  phone       String?
+  dateCreated DateTime?
+
+  @@map("uni_data_subscriber")
+}
+
+model UniDataSupport {
+  id          Int      @id @default(autoincrement())
+  title       String?
+  description String?
+  picture     String?
+  status      Int?
+  authorId    Int?
+  dateCreated DateTime?
+
+  author      UniUser? @relation("SupportAuthor", fields: [authorId], references: [id])
+
+  @@map("uni_data_support")
+}
+
+model UniDataTestimony {
+  id          Int      @id @default(autoincrement())
+  name        String?
+  title       String?
+  description String?
+  picture     String?
+  status      Int?
+  authorId    Int?
+  dateCreated DateTime?
+
+  author      UniUser? @relation("TestimonyAuthor", fields: [authorId], references: [id])
+
+  @@map("uni_data_testimony")
+}
+
+model UniPage {
+  id            BigInt   @id @default(autoincrement())
+  title         String?
+  slug          String?
+  words         String?
+  body          String?
+  description   String?
+  keywords      String?
+  authorId      Int?
+  datePublished DateTime?
+  dateCreated   DateTime?
+  dateModified  DateTime?
+  type          Int?
+  status        Int?
+  picture       String?
+  mobilePicture String?
+  ecertTemplate String?
+  ecertText     String?
+  ecertFilename String?
+  modifierId    Int?
+  metaData      String?
+  template      String?
+  dateUnpublished DateTime?
+  dateInactive    DateTime?
+  trash           Int? @default(0)
+
+  author      UniUser? @relation("PageAuthor", fields: [authorId], references: [id])
+  modifier    UniUser? @relation("PageModifier", fields: [modifierId], references: [id])
+  edits       UniPageEdits[] @relation("PageEdits")
+  versions    UniPageVersion[] @relation("PageVersions")
+  contentComments RedevContentComment[] @relation("CommentOnPage")
+
+  @@map("uni_page")
+}
+
+model UniPageEdits {
+  pageId       BigInt
+  userId       Int
+  isActive     Int?
+  lastActiveAt Int?
+
+  page         UniPage @relation("PageEdits", fields: [pageId], references: [id])
+  user         UniUser @relation("PageEdits", fields: [userId], references: [id])
+
+  @@id([pageId, userId])
+  @@map("uni_page_edits")
+}
+
+model UniPlaceholder {
+  id          Int      @id @default(autoincrement())
+  name        String?
+  type        Int?
+  content     String?
+  status      Int?
+  authorId    Int?
+  modifierId  Int?
+  dateCreated DateTime?
+  dateModified DateTime?
+
+  author      UniUser? @relation("PlaceholderAuthor", fields: [authorId], references: [id])
+  modifier    UniUser? @relation("PlaceholderModifier", fields: [modifierId], references: [id])
+
+  @@map("uni_placeholder")
+}
+
+model UniMetadata {
+  id        Int     @id @default(autoincrement())
+  scope     String?
+  metaKey   String?
+  metaValue String?
+  site      String?
+  status    Int?
+
+  @@map("uni_metadata")
+}
+
+/////////////////////////////////////////////////
+// MEDIA & MENU
+/////////////////////////////////////////////////
+
+model UniMedia {
+  id          BigInt   @id @default(autoincrement())
+  parent      BigInt?
+  name        String?
+  title       String?
+  caption     String?
+  description String?
+  extension   String?
+  fileSize    Int?
+  mediaType   String?
+  authorId    Int?
+  datePosted  DateTime?
+  ordering    Int?
+  status      Int?
+  metaData    String?
+  labels      String?
+
+  parentMedia UniMedia?  @relation("MediaTree", fields: [parent], references: [id])
+  children    UniMedia[] @relation("MediaTree")
+  author      UniUser? @relation("MediaAuthor", fields: [authorId], references: [id])
+
+  @@map("uni_media")
+}
+
+model UniMenu {
+  id         Int      @id @default(autoincrement())
+  parent     Int?
+  groupName  String?
+  title      String?
+  href       String?
+  target     String?
+  svgIcon    String?
+  status     Int?
+  ordering   Int?
+  authorId   Int?
+  modifierId Int?
+  dateCreated DateTime?
+  dateModified DateTime?
+  posX       Float?    @default(0)
+  posY       Float?    @default(0)
+
+  parentMenu UniMenu?  @relation("MenuTree", fields: [parent], references: [id])
+  children   UniMenu[] @relation("MenuTree")
+  author     UniUser? @relation("MenuAuthor", fields: [authorId], references: [id])
+  modifier   UniUser? @relation("MenuModifier", fields: [modifierId], references: [id])
+
+  @@map("uni_menu")
+}
+
+/////////////////////////////////////////////////
+// PAYMENT CHANNEL
+/////////////////////////////////////////////////
+
+model UniPaymentChannel {
+  id             Int     @id @default(autoincrement())
+  parent         Int?
+  title          String?
+  name           String?
+  code           String?
+  phoneRequired  Int?
+  paymentType    Int?
+  paymentGateway String?
+  status         Int?
+  ordering       Int?
+
+  transactions     UniTransaction[]
+  transactionPaids UniTransactionPaid[]
+
+  @@map("uni_payment_channel")
+}
+
+/////////////////////////////////////////////////
+// TRANSACTION CORE (BUSINESS KEY refId)
+/////////////////////////////////////////////////
+
+model UniTransaction {
+  id                BigInt    @id @default(autoincrement())
+  refId             String    @unique
+  userId            Int?
+  articleId         Int?
+  campaignType      Int?
+  donateType        Int?
+  paymentType       Int?
+  paymentChannelId  Int?
+  paymentGateway    String?
+  amount            BigInt?
+  firstName         String?
+  lastName          String?
+  email             String?
+  phone             String?
+  address           String?
+  status            Int?
+  regStatus         Int?
+  regPaidChannel    Int?
+  regPaidAt         DateTime?
+  giftStatus        Int?
+  dateCreated       DateTime?
+  lastUpdated       DateTime?
+  userAgent         String?
+  ipAddress         String?
+  isMobile          Int?
+  utm_source        String?
+  utm_medium        String?
+  utm_content       String?
+  utm_campaign      String?
+  utm_term          String?
+  words             String?
+  metaData          String?
+  legacyId          Int?
+  trash             Int?
+  mail_status       Int?
+  paidChannel       Int?
+  lastPaidAt        DateTime?
+  badRequest        Int?
+  flag              Int?
+  salesforce        Int?
+  consent           String?
+  modifierId        Int?
+  lastModified      DateTime?
+  nextScheduleAt    DateTime?
+  salesforceRetries Int?
+  failedMessage     String?
+
+  user           UniUser? @relation(fields: [userId], references: [id])
+  article        UniDonation? @relation("DonationTransactions", fields: [articleId], references: [id])
+  paymentChannel UniPaymentChannel? @relation(fields: [paymentChannelId], references: [id])
+  paids          UniTransactionPaid[]
+  responses      UniTransactionResponse[]
+  weeklies       UniTransactionWeekly[]
+  paymentLinks   UniTransactionPaymentlink[]
+  ecerts         UniCustomEcert[]
+  shortenLinks   UniZShortenLink[]
+  downloadLogs   UniDownloadLog[] @relation("DownloadTransaction")
+  gopayRetries   UniGopayRetries[] @relation("GopayRetry")
+  salesforcePaymentlinks UniSalesforcePaymentlink[] @relation("SalesforcePaymentlink")
+  salesforceResponses UniSalesforceResponse[] @relation("SalesforceResponse")
+  xenditReminders UniXenditReminderPaymentLink[] @relation("XenditReminder")
+  refundRequests   RedevRefundRequest[]
+  personalizedLinks RedevPersonalizedLink[]
+
+  @@map("uni_transaction")
+}
+
+model UniTransactionPaid {
+  id                BigInt   @id @default(autoincrement())
+  refId             String
+  responseId        BigInt?
+  paymentType       Int?
+  paymentChannelId  Int?
+  paymentGateway    String?
+  amount            BigInt?
+  paidValid         Int?
+  paidAmount        BigInt?
+  donateType        Int?
+  status            Int?
+  invoiceId         String?
+  invoiceDate       DateTime?
+  paidAt            DateTime?
+  dateCreated       DateTime?
+  cycleNumber       Int?
+  flag              Int?
+  salesforceRetries Int?
+  isWeekly          Int?
+  failedMessage     String?
+
+  transaction      UniTransaction @relation(fields: [refId], references: [refId])
+  paymentChannel   UniPaymentChannel? @relation(fields: [paymentChannelId], references: [id])
+  response         UniTransactionResponse? @relation("PaidResponse", fields: [responseId], references: [id])
+  weeklies         UniTransactionWeekly[]
+
+  @@map("uni_transaction_paid")
+}
+
+model UniTransactionResponse {
+  id             BigInt   @id @default(autoincrement())
+  refId          String
+  responseRefId  String?
+  status         String?
+  dateCreated    DateTime?
+  responseType   Int?
+  callbackSlug   String?
+  paymentGateway String?
+  responseText   String?
+  flag           Int?
+  payload        String?
+
+  transaction UniTransaction @relation(fields: [refId], references: [refId])
+  paids       UniTransactionPaid[] @relation("PaidResponse")
+
+  @@map("uni_transaction_response")
+}
+
+model UniTransactionWeekly {
+  id             BigInt   @id @default(autoincrement())
+  refId          String
+  paidId         BigInt?
+  type           String?
+  paymentGateway String?
+  invoiceId      String?
+  invoiceDate    DateTime?
+  paidAmount     BigInt?
+  lastPaidAt     DateTime?
+  dateCreated    DateTime?
+
+  transaction UniTransaction @relation(fields: [refId], references: [refId])
+  paid        UniTransactionPaid? @relation(fields: [paidId], references: [id])
+
+  @@map("uni_transaction_weekly")
+}
+
+model UniTransactionPaymentlink {
+  id             BigInt   @id @default(autoincrement())
+  refId          String
+  invoiceId      String?
+  externalId     String?
+  paymentLinkUrl String?
+  issuedDate     DateTime?
+  paidAt         DateTime?
+  amount         BigInt?
+  status         Int?
+
+  transaction UniTransaction @relation(fields: [refId], references: [refId])
+
+  @@map("uni_transaction_paymentlink")
+}
+
+/////////////////////////////////////////////////
+// LOGGING & UTIL
+/////////////////////////////////////////////////
+
+model UniLogActivity {
+  id          BigInt   @id @default(autoincrement())
+  dataId      String?
+  userId      Int?
+  dataBefore  String?
+  dataAfter   String?
+  dateCreated DateTime?
+  feature     String?
+  action      String?
+  ipAddress   String?
+
+  user        UniUser? @relation("LogActivity", fields: [userId], references: [id])
+
+  @@map("uni_log_activity")
+}
+
+model UniClickWaBubble {
+  id          Int      @id @default(autoincrement())
+  user_agent  String?
+  page_title  String?
+  total_click Int?
+  date_created DateTime?
+  updated_at  DateTime?
+
+  @@map("uni_click_wa_bubble")
+}
+
+model UniMailSent {
+  id          Int      @id @default(autoincrement())
+  mailSubject String?
+  mailFrom    String?
+  mailTo      String?
+  mailBody    String?
+  mailDate    DateTime?
+
+  @@map("uni_mail_sent")
+}
+
+model UniDownloadLog {
+  id             BigInt   @id @default(autoincrement())
+  refId          String
+  articleId      Int?
+  status         Int?
+  userAgent      String?
+  ipAddress      String?
+  isMobile       Int?
+  attemptedAt    DateTime?
+  failedMessage  String?
+
+  transaction    UniTransaction @relation("DownloadTransaction", fields: [refId], references: [refId])
+  article        UniDonation? @relation(fields: [articleId], references: [id])
+
+  @@map("uni_download_log")
+}
+
+model UniDownloadUtmEcertifLog {
+  id             BigInt   @id @default(autoincrement())
+  name           String?
+  amount         BigInt?
+  status         Int?
+  isMobile       Int?
+  attemptedAt    DateTime?
+  failedMessage  String?
+
+  @@map("uni_download_utm_ecertif_log")
+}
+
+model UniGopayRetries {
+  id         Int      @id @default(autoincrement())
+  refId      String
+  orderId    String?
+  cycles     Int?
+  lastUpdate DateTime?
+
+  transaction UniTransaction @relation("GopayRetry", fields: [refId], references: [refId])
+
+  @@map("uni_gopay_retries")
+}
+
+model UniSalesforcePaymentlink {
+  id          BigInt   @id @default(autoincrement())
+  refId       String
+  invoiceId   String?
+  invoiceLink String?
+  invoiceDate DateTime?
+  dateCreated DateTime?
+  hasSent     Int?
+
+  transaction UniTransaction @relation("SalesforcePaymentlink", fields: [refId], references: [refId])
+
+  @@map("uni_salesforce_paymentlink")
+}
+
+model UniSalesforceResponse {
+  id            Int      @id @default(autoincrement())
+  salesforceId  String?
+  status        String?
+  type          String?
+  message       String?
+  contactId     String?
+  refId         String
+  responseText  String?
+  payload       String?
+  statusPayment Int?
+  dateCreated   DateTime?
+
+  transaction   UniTransaction @relation("SalesforceResponse", fields: [refId], references: [refId])
+
+  @@map("uni_salesforce_response")
+}
+
+model UniXenditReminderPaymentLink {
+  id           BigInt   @id @default(autoincrement())
+  refId        String
+  externalId   String?
+  invoiceId    String?
+  amount       BigInt?
+  invoiceUrl   String?
+  type         String?
+  attemptRetry Int?
+  expiryDate   DateTime?
+  dateCreated  DateTime?
+  hasSent      Int?
+
+  transaction  UniTransaction @relation("XenditReminder", fields: [refId], references: [refId])
+
+  @@map("uni_xendit_reminder_payment_link")
+}
+
+model UniUserPermission {
+  id    Int     @id @default(autoincrement())
+  name  String?
+  title String?
+
+  @@map("uni_user_permission")
+}
+
+model UniUserRolesV2 {
+  userId Int
+  roleId Int
+
+  user   UniUser     @relation("UserRolesV2", fields: [userId], references: [id])
+  role   UniUserRole @relation("UserRolesV2", fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("uni_user_roles_v2")
+}
+
+model UniPageVersion {
+  id        BigInt   @id @default(autoincrement())
+  pageId    BigInt
+  title     String?
+  slug      String?
+  body      String?  // JSON snapshot
+  version   Int
+  authorId  Int?
+  createdAt DateTime @default(now())
+
+  page      UniPage  @relation("PageVersions", fields: [pageId], references: [id], onDelete: Cascade)
+  author    UniUser? @relation("PageVersionAuthor", fields: [authorId], references: [id])
+
+  @@map("uni_page_version")
+}
+
+// Redundant UniDonationVersion removed from here and consolidated above.
+
+/////////////////////////////////////////////////
+// EXTERNAL & LEGACY
+/////////////////////////////////////////////////
+
+model UniCustomEcert {
+  id             Int    @id
+  refId          String
+  donorName      String?
+  donationAmount BigInt?
+  donationType   String?
+  campaign       String?
+  textSetup      String?
+  dateCreated    DateTime?
+  generatedBy    Int?
+
+  transaction    UniTransaction @relation(fields: [refId], references: [refId])
+  generator      UniUser? @relation("EcertGenerator", fields: [generatedBy], references: [id])
+
+  @@map("uni_custom_ecert")
+}
+
+model UniZShortenLink {
+  id       Int    @id @default(autoincrement())
+  refId    String
+  token    String?
+  username String?
+
+  transaction UniTransaction @relation(fields: [refId], references: [refId])
+
+  @@map("uni_z_shorten_link")
+}
+
+/////////////////////////////////////////////////
+// WEB LEGACY TABLES
+/////////////////////////////////////////////////
+
+model WebDokuRcrregNotify {
+  id            Int      @id @default(autoincrement())
+  statustype    String?
+  message       String?
+  errorcode     String?
+  billnumber    String?
+  status        String?
+  cardnumber    String?
+  mallid        String?
+  words         String?
+  customerid    String?
+  chainmerchant String?
+  createdAt     DateTime?
+
+  @@map("web_doku_rcrreg_notify")
+}
+
+model WebMidtransCallback {
+  id                   Int      @id @default(autoincrement())
+  campaignId           String?
+  invoiceId            String?
+  orderId              String?
+  merchantId           String?
+  transactionId        String?
+  transactionStatus    String?
+  transactionTime      DateTime?
+  settlementTime       DateTime?
+  currency             String?
+  grossAmount          String?
+  paymentType          String?
+  fraudStatus          String?
+  statusCode           String?
+  statusMessage        String?
+  createdAt            DateTime?
+  updatedAt            DateTime?
+  emailTransferNotif   Int?
+  emailInitNotif       Int?
+  emailRcrregNotif     Int?
+  emailRcrNotif        Int?
+
+  @@map("web_midtrans_callback")
+}
+
+model WebTransaction {
+  id                    Int      @id @default(autoincrement())
+  articleId             Int?
+  transIdMerchant       String?
+  billNumber            String?
+  transactionId         String?
+  transactionUser       String?
+  transactionType       String?
+  transactionAmount     String?
+  transactionDate       DateTime?
+  transactionVia        String?
+  transactionBank       String?
+  transactionStatus     String?
+  userNameTitle         String?
+  userName              String?
+  userEmail             String?
+  userPhone             String?
+  userAddress           String?
+  userIpAddress         String?
+  utmSource             String?
+  utmMedium             String?
+  utmContent            String?
+  utmCampaign           String?
+  utmTerm               String?
+  emailTransferNotif    Int?
+  emailInitNotif        Int?
+  emailRcrregNotif      Int?
+  emailSuccessNotif     Int?
+  cardType              String?
+  isDelete              Int?
+  isPause               Int?
+  isGimmick             Int?
+
+  @@map("web_transaction")
+}
+
+model WebXenditCallback {
+  id                      Int      @id @default(autoincrement())
+  invoiceId               String?
+  externalId              String?
+  userId                  String?
+  recurringPaymentId      String?
+  merchant                String?
+  email                   String?
+  description             String?
+  currency                String?
+  amount                  String?
+  feesPaidAmount          String?
+  adjustedReceivedAmount  String?
+  paidAmount              String?
+  status                  String?
+  bankCode                String?
+  outletName              String?
+  ewalletType             String?
+  creditCard              String?
+  onDemand                String?
+  recurringId             String?
+  paymentMethod           String?
+  paymentChannel          String?
+  paymentDestination      String?
+  paidAt                  DateTime?
+  createdAt               DateTime?
+  updatedAt               DateTime?
+  emailTransferNotif      Int?
+  emailInitNotif          Int?
+  emailRcrregNotif        Int?
+
+  @@map("web_xendit_callback")
+}
+
+model WebXenditRecurring {
+  id                 Int      @id @default(autoincrement())
+  paymentMethodId    String?
+  externalId         String?
+  userId             String?
+  email              String?
+  description        String?
+  amount             String?
+  status             String?
+  invoiceDuration    String?
+  invoiceUrl         String?
+  recurringId        String?
+  recurringInterval  String?
+  recurringCount     String?
+  recurringRecharge  String?
+  recurringProgress  String?
+  recurringExpire    String?
+  startedAt          DateTime?
+  createdAt          DateTime?
+  updatedAt          DateTime?
+
+  @@map("web_xendit_recurring")
+}
+
+/////////////////////////////////////////////////
+// REDEV – NEW TABLES FOR REDEV FEATURES
+// See docs/REDEV_NEW_TABLES_SUMMARY.md for rationale
+/////////////////////////////////////////////////
+
+/// Lead / non-donation form submissions. CMS: Lead submissions list, Lead data export. Website: General forms (surveys, contact, lead gen).
+model RedevLeadSubmission {
+  id        BigInt   @id @default(autoincrement())
+  formId    Int?     // optional FK to RedevWebForm when form is registered
+  source    String?  // page slug, campaign slug, or "contact" etc.
+  email     String?
+  name      String?
+  phone     String?
+  payload   String?  // JSON: other form fields
+  metaData  String?
+  createdAt DateTime @default(now())
+
+  form      RedevWebForm? @relation(fields: [formId], references: [id])
+  @@map("redev_lead_submission")
+}
+
+/// Redirect rules. CMS/Admin: Page redirects list. Governance: Redirect management (URL, IP/geo).
+model RedevRedirect {
+  id          Int      @id @default(autoincrement())
+  sourcePath  String?  // from URL or pattern
+  targetUrl   String?
+  type        String?  // internal | external | geo
+  countryCode String?
+  ipRange     String?
+  priority    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("redev_redirect")
+}
+
+/// Donor Portal: Saved payment methods (PSP token, masked card). Used for "Saved payment methods", "Update payment method".
+model RedevDonorPaymentMethod {
+  id         BigInt   @id @default(autoincrement())
+  userId     Int
+  gateway    String?  // xendit | midtrans | doku
+  tokenOrId  String?  // PSP token or masked reference
+  last4      String?
+  brand      String?  // visa | mastercard | etc
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user       UniUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("redev_donor_payment_method")
+}
+
+/// Donor Portal + CMS: Refund request and approval. "Request refund", "Refund status", "Donor care approve/reject".
+model RedevRefundRequest {
+  id              BigInt   @id @default(autoincrement())
+  transactionRefId String
+  userId          Int?     // donor who requested
+  requestedAt     DateTime @default(now())
+  reason          String?
+  status          String?  // pending | approved | rejected
+  reviewedBy      Int?
+  reviewedAt      DateTime?
+  responseMessage String?
+
+  transaction  UniTransaction @relation(fields: [transactionRefId], references: [refId])
+  user         UniUser?       @relation("RefundRequestUser", fields: [userId], references: [id])
+  reviewer     UniUser?       @relation("RefundReviewer", fields: [reviewedBy], references: [id])
+
+  @@map("redev_refund_request")
+}
+
+/// Donor Portal: Communication preferences & marketing consent history. "Communication preferences", "Marketing consent history".
+model RedevConsentHistory {
+  id        BigInt   @id @default(autoincrement())
+  userId    Int
+  channel   String?  // email | sms | whatsapp | push
+  topic     String?  // marketing | transactional | etc
+  consented Boolean
+  changedAt DateTime @default(now())
+  source    String?  // portal | admin | api
+
+  user      UniUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("redev_consent_history")
+}
+
+/// Donor Portal: Support tickets. "Support tickets", "Create and track help cases".
+model RedevSupportTicket {
+  id         BigInt   @id @default(autoincrement())
+  userId     Int
+  subject    String?
+  body       String?
+  status     String?  // open | pending | resolved | closed
+  priority   Int?
+  assignedTo Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  closedAt   DateTime?
+
+  user       UniUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("redev_support_ticket")
+}
+
+/// Donor Portal: Address book. "Address book", "Store, label, set default billing & shipping".
+model RedevDonorAddress {
+  id               BigInt   @id @default(autoincrement())
+  userId           Int
+  label            String?  // Home | Office | Billing | Shipping
+  address          String?
+  city             String?
+  postalCode       String?
+  region           String?
+  country          String?
+  isDefaultBilling Boolean  @default(false)
+  isDefaultShipping Boolean @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             UniUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("redev_donor_address")
+}
+
+/// Authoring: Inline comments on pages/donations. "Inline comments" (Google-Docs-style notes).
+model RedevContentComment {
+  id         BigInt   @id @default(autoincrement())
+  pageId     BigInt?  // set when commenting on a page
+  donationId Int?     // set when commenting on a donation/campaign
+  blockId    String?  // optional: block key in body JSON
+  authorId   Int
+  comment    String?
+  resolvedAt DateTime?
+  resolvedBy Int?
+  createdAt  DateTime @default(now())
+
+  page       UniPage?     @relation("CommentOnPage", fields: [pageId], references: [id], onDelete: Cascade)
+  donation   UniDonation? @relation("CommentOnDonation", fields: [donationId], references: [id], onDelete: Cascade)
+  author     UniUser     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("redev_content_comment")
+}
+
+/// Authoring: Reusable content blocks library. "Reusable modules library", "Content blocks library".
+model RedevContentBlock {
+  id        BigInt   @id @default(autoincrement())
+  name      String?
+  slug      String?  @unique
+  body      String?  // JSON block definition
+  type      String?  // accordion | carousel | faq | card | etc
+  authorId  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("redev_content_block")
+}
+
+/// Website Security: Block by country or IP. "Block country/IPs" (config at site/market level).
+model RedevSecurityBlock {
+  id       Int     @id @default(autoincrement())
+  type     String? // country | ip
+  value    String? // country code or IP/CIDR
+  scope    String? // global | market | site
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("redev_security_block")
+}
+
+/// Admin/Data: Web form definitions (non-donation). "Web-forms list", general forms integrated with CRM.
+model RedevWebForm {
+  id          Int      @id @default(autoincrement())
+  name        String?
+  slug        String?  @unique
+  description String?
+  schema      String?  // JSON: form fields definition
+  targetUrl   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  submissions RedevLeadSubmission[]
+  @@map("redev_web_form")
+}
+
+/// Value max: Personalized URLs (upgrade, save, reactivate, extra cash, pledge conversion, payment update). Short-lived tokens for one-click donor actions.
+model RedevPersonalizedLink {
+  id        BigInt   @id @default(autoincrement())
+  token     String   @unique
+  type      String?  // upgrade | save | reactivate | extra_cash | pledge_conversion | payment_update
+  userId    Int?
+  refId     String?  // transaction refId when relevant
+  expiresAt DateTime?
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  transaction UniTransaction? @relation(fields: [refId], references: [refId])
+  user        UniUser?        @relation(fields: [userId], references: [id])
+
+  @@map("redev_personalized_link")
+}
+
+/// Donor Portal: Capture interests/campaigns and survey responses. "Capture interests/campaigns", "Capture surveys/questions".
+model RedevDonorInterest {
+  id     BigInt   @id @default(autoincrement())
+  userId Int
+  source String?  // campaign slug or form id
+  key    String?  // interest/campaign code
+  value  String?  // JSON or string response
+  createdAt DateTime @default(now())
+
+  user   UniUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("redev_donor_interest")
+}
+
+/// Website Checkout: Abandoned donation/cart for recovery emails. "Abandoned donation (cart) recovery".
+model RedevAbandonedCart {
+  id         BigInt   @id @default(autoincrement())
+  email      String?
+  sessionId  String?
+  articleId  Int?     // donation/campaign id
+  amount     BigInt?
+  step       Int?
+  payload    String?  // JSON snapshot
+  emailSentAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@map("redev_abandoned_cart")
+}
+
+/// Donor Portal / Auth: SSO, Passkey, MFA linkage. "Social/SSO login", "Passkey/biometric", "Multi-factor authentication".
+model RedevUserAuthMethod {
+  id         BigInt   @id @default(autoincrement())
+  userId     Int
+  provider   String?  // sso_google | sso_apple | passkey | mfa_totp
+  providerId String?  // external id from provider
+  meta       String?  // JSON: extra config (e.g. passkey credential id)
+  createdAt  DateTime @default(now())
+
+  user       UniUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("redev_user_auth_method")
+}

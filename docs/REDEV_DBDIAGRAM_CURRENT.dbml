@@ -1,0 +1,762 @@
+// ==================================================
+// REDEV CMS - Database Diagram (DBML)
+// Matches CURRENT TABLES (MySQL) - exact column names & types
+// Use with dbdiagram.io: Import from DBML
+// Prisma schema unchanged; this reflects actual DB structure.
+// ==================================================
+
+Project REDEV_CMS_Current {
+  database_type: 'MySQL'
+  Note: 'Current CMS DB - exact structure from table dump'
+}
+
+// ==================================================
+// USER & AUTH
+// ==================================================
+
+Table uni_user {
+  id int [pk, increment, note: 'unsigned']
+  email varchar(145) [not null]
+  password varchar(60) [not null]
+  name varchar(255) [not null]
+  roleId int [not null, ref: > uni_user_role.id]
+  gender tinyint [not null]
+  status tinyint [not null]
+  dateRegistered datetime
+  dateActivated datetime
+  birthDate date
+  picture varchar(255)
+  phoneNumber varchar(45)
+  address varchar(255)
+  city varchar(45)
+  postalCode varchar(45)
+  region varchar(45)
+  logAttempts int [not null]
+  logTimeout int [not null]
+  metaData text
+  logChange int [not null]
+  lang varchar(15) [not null]
+  ipSignup varchar(255)
+  Note: 'CMS users'
+}
+
+Table uni_user_role {
+  id int [pk, increment]
+  title varchar(45) [not null]
+  name varchar(45) [not null]
+  groupName varchar(45)
+  permissions text
+  reports text
+}
+
+Table uni_user_logged_token {
+  id bigint [pk, increment]
+  userId bigint [not null, ref: > uni_user.id]
+  token varchar(255) [not null]
+  loggedFrom varchar(45) [not null]
+  userAgent varchar(255) [not null]
+  dateLogged datetime [not null]
+  dateLastVisit datetime [not null]
+  ipLogged varchar(255) [not null]
+  ipLastVisit varchar(255) [not null]
+  expires datetime [not null]
+}
+
+Table uni_user_password_history {
+  id int [pk, increment]
+  userId int [not null, ref: > uni_user.id]
+  oldPasswordHash varchar(60) [not null]
+  changeAt datetime [not null]
+}
+
+Table uni_user_reqtoken {
+  id int [pk, increment]
+  authType int [not null]
+  authToken varchar(256) [not null]
+  userId bigint [not null, ref: > uni_user.id]
+  dateCreated datetime [not null]
+  dateExpired datetime [not null]
+  ipAddress varchar(256) [not null]
+  attempts int [not null]
+  userAgent varchar(256) [not null]
+  requestData text
+}
+
+Table uni_user_permission {
+  id int [pk, increment]
+  name varchar(65) [not null]
+  title varchar(65) [not null]
+}
+
+Table uni_user_roles_v2 {
+  userId int [pk, ref: > uni_user.id]
+  roleId int [pk, ref: > uni_user_role.id]
+}
+
+// ==================================================
+// ROLE & PERMISSION
+// ==================================================
+
+Table uni_permissions_v2 {
+  id int [pk, increment]
+  module varchar(100) [not null]
+  action varchar(100) [not null]
+}
+
+Table uni_role_permissions_v2 {
+  roleId int [pk, ref: > uni_user_role.id]
+  permissionId int [pk, ref: > uni_permissions_v2.id]
+}
+
+Table uni_role_history {
+  id int [pk, increment]
+  userId int [not null, ref: > uni_user.id]
+  roleId int [not null, ref: > uni_user_role.id]
+  action varchar(10) [not null]
+  changeBy int [not null, ref: > uni_user.id]
+  changeAt datetime [not null]
+}
+
+// ==================================================
+// CMS - PAGES
+// ==================================================
+
+Table uni_page {
+  id bigint [pk, increment]
+  title varchar(255) [not null]
+  slug varchar(255) [not null]
+  words text
+  body text
+  description text
+  keywords varchar(255)
+  authorId int [not null, ref: > uni_user.id]
+  datePublished datetime
+  dateCreated datetime
+  dateModified datetime
+  type tinyint
+  status tinyint [not null]
+  picture varchar(125)
+  mobilePicture varchar(125)
+  ecertTemplate varchar(145)
+  ecertText text
+  ecertFilename varchar(145)
+  modifierId int [not null, ref: > uni_user.id]
+  metaData text
+  template varchar(45) [not null]
+  Note: 'CMS pages (block-based)'
+}
+
+Table uni_page_edits {
+  pageId int [not null, ref: > uni_page.id]
+  userId int [not null, ref: > uni_user.id]
+  isActive tinyint [not null]
+  lastActiveAt int [not null]
+}
+
+// ==================================================
+// CMS - DONATIONS (Articles)
+// ==================================================
+
+Table uni_donation {
+  id int [pk, increment]
+  donateType tinyint [not null]
+  title varchar(255) [not null]
+  slug varchar(255) [not null]
+  description varchar(255)
+  keywords varchar(255)
+  body text
+  bodyOneOff text
+  authorId int [not null, ref: > uni_user.id]
+  modifierId int [not null, ref: > uni_user.id]
+  dateCreated datetime [not null]
+  datePublished date [not null]
+  dateUnpublished date [not null]
+  dateInactive date [not null]
+  dateModified datetime [not null]
+  status tinyint [not null]
+  specialTag tinyint [not null]
+  specialTags varchar(255)
+  campaignType tinyint [not null]
+  usedForAds tinyint [not null]
+  featured tinyint [not null]
+  picture varchar(145)
+  mobilePicture varchar(145)
+  ecertMonthly varchar(145)
+  ecertOneOff varchar(145)
+  thumbnail varchar(145)
+  thankyouPicture varchar(145)
+  monthlyParams text
+  oneoffParams text
+  template varchar(145) [not null]
+  widDateStart date
+  widDateEnd date
+  widParams text
+  widPicture varchar(145)
+  metaData text
+  accessRoles text
+  Note: 'Donation campaigns (Articles)'
+}
+
+Table uni_donation_edits {
+  articleId int [not null, ref: > uni_donation.id]
+  userId int [not null, ref: > uni_user.id]
+  isActive tinyint [not null]
+  lastActiveAt int [not null]
+}
+
+Table uni_donation_tag {
+  id int [pk, increment]
+  slug varchar(145) [not null]
+  title varchar(145) [not null]
+}
+
+Table uni_tag {
+  id int [pk, increment]
+  slug varchar(145) [not null]
+  title varchar(145) [not null]
+  owner tinyint [not null]
+}
+
+// ==================================================
+// DATA COLLECTION
+// ==================================================
+
+Table uni_data_faq {
+  id int [pk, increment]
+  parent int [not null, ref: > uni_data_faq.id]
+  slug varchar(45)
+  title varchar(255)
+  picture varchar(145)
+  answer text
+  status tinyint [not null]
+  authorId int [not null, ref: > uni_user.id]
+  modifierId int [not null, ref: > uni_user.id]
+  description varchar(255)
+  keywords varchar(255)
+  metaData text
+  dateCreated datetime [not null]
+  dateModified datetime [not null]
+  Note: 'FAQ tree'
+}
+
+Table uni_data_bank {
+  id int [pk, increment]
+  title varchar(255)
+  currency varchar(55)
+  description text
+  picture varchar(255)
+  status tinyint [not null]
+  ordering int [not null]
+  authorId int [ref: > uni_user.id]
+  dateCreated datetime
+}
+
+Table uni_data_location {
+  id int [pk, increment]
+  title text
+  address text
+  dateStart date
+  dateEnd date
+  status int
+  authorId int [ref: > uni_user.id]
+  dateCreated datetime
+}
+
+Table uni_data_subscriber {
+  id bigint [pk, increment]
+  name varchar(145) [not null]
+  email varchar(145) [not null]
+  phone varchar(145)
+  dateCreated datetime [not null]
+}
+
+Table uni_data_support {
+  id int [pk, increment]
+  title varchar(255) [not null]
+  description text
+  picture varchar(45)
+  status tinyint [not null]
+  authorId int [ref: > uni_user.id]
+  dateCreated datetime
+}
+
+Table uni_data_testimony {
+  id int [pk, increment]
+  name varchar(45)
+  title varchar(255)
+  description text
+  picture varchar(45)
+  status tinyint [not null]
+  authorId int [ref: > uni_user.id]
+  dateCreated datetime
+}
+
+// ==================================================
+// MEDIA & MENU
+// ==================================================
+
+Table uni_media {
+  id bigint [pk, increment]
+  parent bigint [not null, ref: > uni_media.id]
+  name varchar(255) [not null]
+  title varchar(255) [not null]
+  caption text
+  description text
+  extension varchar(32)
+  fileSize int [not null]
+  mediaType varchar(10) [not null]
+  authorId int [not null, ref: > uni_user.id]
+  datePosted datetime
+  ordering int [not null]
+  status tinyint [not null]
+  metaData text
+  labels text
+}
+
+Table uni_menu {
+  id int [pk, increment]
+  parent int [not null, ref: > uni_menu.id]
+  groupName varchar(65) [not null]
+  title varchar(45) [not null]
+  href varchar(255)
+  target varchar(45)
+  svgIcon text
+  status tinyint [not null]
+  ordering int [not null]
+  authorId bigint [not null, ref: > uni_user.id]
+  modifierId bigint [not null, ref: > uni_user.id]
+  dateCreated datetime [not null]
+  dateModified datetime [not null]
+  Note: 'Appearances > Menus'
+}
+
+// ==================================================
+// PLACEHOLDER & METADATA (Appearances / Settings)
+// ==================================================
+
+Table uni_placeholder {
+  id int [pk, increment]
+  name varchar(45) [not null]
+  type tinyint [not null]
+  content text
+  status tinyint [not null]
+  authorId varchar(45) [not null]
+  modifierId varchar(45) [not null]
+  dateCreated varchar(45) [not null]
+  dateModified varchar(45) [not null]
+  Note: 'Appearances > Placeholders, Email Template'
+}
+
+Table uni_metadata {
+  id int [pk, increment]
+  scope varchar(100) [not null]
+  metaKey varchar(255) [not null]
+  metaValue text
+  site varchar(45) [not null]
+  status tinyint [not null]
+  Note: 'Settings: General, Mailer, Media, UTM e-Cert, etc.'
+}
+
+Table uni_click_wa_bubble {
+  id int [pk, increment]
+  user_agent text
+  page_title varchar(255)
+  total_click int [not null, default: 0]
+  date_created timestamp [not null]
+  updated_at timestamp [not null]
+  Note: 'Settings > WA Bubble; WA Bubble Reports > Click Report'
+}
+
+// ==================================================
+// PAYMENT CHANNEL (Settings > Payment Channels)
+// ==================================================
+
+Table uni_payment_channel {
+  id int [pk, increment]
+  parent int [not null, ref: > uni_payment_channel.id]
+  title varchar(45) [not null]
+  name varchar(45)
+  code varchar(45)
+  phoneRequired tinyint [not null]
+  paymentType tinyint
+  paymentGateway varchar(45)
+  status tinyint
+  ordering int [not null]
+}
+
+// ==================================================
+// TRANSACTION CORE (refId = business key)
+// ==================================================
+
+Table uni_transaction {
+  id bigint [pk, increment]
+  refId varchar(145) [not null, unique]
+  userId int [not null, ref: > uni_user.id]
+  articleId int [not null, ref: > uni_donation.id]
+  campaignType int [not null]
+  donateType tinyint [not null]
+  paymentType int [not null]
+  paymentChannelId int [not null, ref: > uni_payment_channel.id]
+  paymentGateway varchar(20) [not null]
+  amount bigint [not null]
+  firstName varchar(200) [not null]
+  lastName varchar(200)
+  email varchar(145)
+  phone varchar(45)
+  address text
+  status tinyint [not null]
+  regStatus tinyint [not null]
+  regPaidChannel tinyint [not null]
+  regPaidAt datetime
+  giftStatus tinyint [not null]
+  dateCreated datetime [not null]
+  lastUpdated datetime [not null]
+  userAgent varchar(255) [not null]
+  ipAddress varchar(255) [not null]
+  isMobile tinyint [not null]
+  utm_source varchar(255)
+  utm_medium varchar(255)
+  utm_content varchar(255)
+  utm_campaign varchar(255)
+  utm_term varchar(255)
+  words text
+  metaData text
+  legacyId tinyint [not null]
+  trash tinyint [not null]
+  mail_status tinyint [not null]
+  paidChannel int [not null]
+  lastPaidAt datetime
+  badRequest tinyint [not null]
+  flag tinyint [not null]
+  salesforce tinyint [not null]
+  consent varchar(255) [not null]
+  modifierId tinyint [not null]
+  lastModified datetime [not null]
+  nextScheduleAt date
+  salesforceRetries tinyint [not null]
+  failedMessage varchar(255)
+  Note: 'Donation Reports, Detail Transaction, Edit Subscription'
+}
+
+Table uni_transaction_paid {
+  id bigint [pk, increment]
+  refId varchar(145) [not null, ref: > uni_transaction.refId]
+  responseId bigint [not null, ref: > uni_transaction_response.id]
+  paymentType int [not null]
+  paymentChannelId int [not null, ref: > uni_payment_channel.id]
+  paymentGateway varchar(20) [not null]
+  amount bigint [not null]
+  paidValid tinyint [not null]
+  paidAmount bigint [not null]
+  donateType tinyint [not null]
+  status tinyint [not null]
+  invoiceId varchar(255)
+  invoiceDate datetime
+  paidAt datetime
+  dateCreated datetime [not null]
+  cycleNumber int [not null]
+  flag tinyint [not null]
+  salesforceRetries tinyint [not null]
+  isWeekly tinyint [not null]
+  failedMessage varchar(100)
+}
+
+Table uni_transaction_response {
+  id bigint [pk, increment]
+  refId varchar(145) [not null, ref: > uni_transaction.refId]
+  responseRefId varchar(255)
+  status varchar(255)
+  dateCreated datetime [not null]
+  responseType tinyint [not null]
+  callbackSlug varchar(65)
+  paymentGateway varchar(45) [not null]
+  responseText text
+  flag tinyint [not null]
+  payload text
+  Note: 'Donation Reports > Response Finder'
+}
+
+Table uni_transaction_weekly {
+  id bigint [pk, increment]
+  refId varchar(145) [not null, ref: > uni_transaction.refId]
+  paidId bigint [not null, ref: > uni_transaction_paid.id]
+  type varchar(50) [not null]
+  paymentGateway varchar(20) [not null]
+  invoiceId varchar(255)
+  invoiceDate datetime
+  paidAmount bigint [not null]
+  lastPaidAt datetime
+  dateCreated datetime [not null]
+  Note: 'Donation Reports > Weekly Donation'
+}
+
+Table uni_transaction_paymentlink {
+  id bigint [pk, increment]
+  refId varchar(145) [not null, ref: > uni_transaction.refId]
+  invoiceId varchar(45) [not null]
+  externalId varchar(90) [not null]
+  paymentLinkUrl varchar(30) [not null]
+  issuedDate datetime [not null]
+  paidAt datetime
+  amount bigint [not null]
+  status tinyint [not null]
+  Note: 'Donation Reports > Payment Link Report'
+}
+
+// ==================================================
+// LOGGING & MONITORING (Tools Monitoring)
+// ==================================================
+
+Table uni_log_activity {
+  id bigint [pk, increment]
+  dataId varchar(145)
+  userId int [not null, ref: > uni_user.id]
+  dataBefore text
+  dataAfter text
+  dateCreated datetime [not null]
+  feature varchar(50) [not null]
+  action varchar(100) [not null]
+  ipAddress varchar(255) [not null]
+  Note: 'Tools Monitoring > Log Activity'
+}
+
+Table uni_mail_sent {
+  id int [pk, increment]
+  mail_subject varchar(255) [not null]
+  mail_from varchar(255) [not null]
+  mail_to varchar(255) [not null]
+  mail_body text [not null]
+  mail_date datetime
+  Note: 'Tools Monitoring > Sent Items'
+}
+
+// ==================================================
+// DOWNLOAD & E-CERT (e-Certificate Tools)
+// ==================================================
+
+Table uni_download_log {
+  id bigint [pk, increment]
+  refId varchar(145) [not null, ref: > uni_transaction.refId]
+  articleId int [not null, ref: > uni_donation.id]
+  status tinyint [not null]
+  userAgent varchar(255) [not null]
+  ipAddress varchar(64) [not null]
+  isMobile tinyint [not null]
+  attemptedAt datetime [not null]
+  failedMessage varchar(255)
+  Note: 'e-Certificate Tools > TY Download Log'
+}
+
+Table uni_download_utm_ecertif_log {
+  id bigint [pk, increment]
+  name varchar(200) [not null]
+  amount bigint
+  status tinyint [not null]
+  isMobile tinyint [not null]
+  attemptedAt datetime [not null]
+  failedMessage varchar(255)
+  Note: 'e-Certificate Tools > Dynamic Download Log'
+}
+
+Table uni_custom_ecert {
+  id int [pk, increment]
+  refId varchar(255) [ref: > uni_transaction.refId]
+  donorName varchar(255)
+  donationAmount bigint
+  donationType varchar(100)
+  campaign varchar(150)
+  textSetup text
+  dateCreated datetime
+  generatedBy int [ref: > uni_user.id]
+  Note: 'e-Certificate Tools > Custom E-Certificate, Custom E-Certificate Log'
+}
+
+// ==================================================
+// SALESFORCE & PAYMENT HELPERS
+// ==================================================
+
+Table uni_gopay_retries {
+  id int [pk, increment]
+  refId varchar(145) [not null, ref: > uni_transaction.refId]
+  orderId varchar(165) [not null]
+  cycles int [not null]
+  lastUpdate datetime
+}
+
+Table uni_salesforce_paymentlink {
+  id bigint [pk, increment]
+  refId varchar(145) [not null, ref: > uni_transaction.refId]
+  invoiceId varchar(255) [not null]
+  invoiceLink varchar(255) [not null]
+  invoiceDate datetime [not null]
+  dateCreated datetime [not null]
+  hasSent tinyint
+  Note: 'Transaction Tools > Salesforce Payload'
+}
+
+Table uni_salesforce_response {
+  id int [pk, increment]
+  salesforceId varchar(145)
+  status varchar(255)
+  type varchar(155)
+  message text
+  contactId varchar(145)
+  refId varchar(145) [ref: > uni_transaction.refId]
+  responseText text
+  payload text
+  statusPayment tinyint
+  dateCreated datetime [not null]
+  Note: 'Salesforce > API Responses'
+}
+
+Table uni_xendit_reminder_payment_link {
+  id bigint [pk, increment]
+  refId varchar(145) [not null, ref: > uni_transaction.refId]
+  externalId varchar(145) [not null]
+  invoiceId varchar(145) [not null]
+  amount bigint [not null]
+  invoiceUrl varchar(145) [not null]
+  type varchar(145) [not null]
+  attemptRetry int [not null]
+  expiryDate date [not null]
+  dateCreated datetime [not null]
+  hasSent tinyint [not null]
+}
+
+Table uni_z_shorten_link {
+  id int [pk, increment]
+  refId varchar(146) [unique]
+  token varchar(256)
+  username varchar(146)
+}
+
+// ==================================================
+// WEB LEGACY (Payment callbacks / legacy)
+// ==================================================
+
+Table web_doku_rcrreg_notify {
+  id int [pk, increment]
+  statustype varchar(250)
+  message varchar(250)
+  errorcode varchar(250)
+  billnumber varchar(250)
+  status varchar(250)
+  cardnumber varchar(250)
+  mallid varchar(250)
+  words varchar(250)
+  customerid varchar(250)
+  chainmerchant varchar(250)
+  created_at datetime [not null]
+}
+
+Table web_midtrans_callback {
+  id int [pk, increment]
+  campaign_id varchar(255)
+  invoice_id varchar(255)
+  order_id varchar(255)
+  merchant_id varchar(255)
+  transaction_id varchar(255)
+  transaction_status varchar(255)
+  transaction_time datetime [not null]
+  settlement_time datetime [not null]
+  currency varchar(255)
+  gross_amount varchar(255)
+  payment_type varchar(255)
+  fraud_status varchar(255)
+  status_code varchar(255)
+  status_message varchar(255)
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  email_transfer_notif int [not null]
+  email_init_notif int [not null]
+  email_rcrreg_notif int [not null]
+  email_rcr_notif int [not null]
+}
+
+Table web_transaction {
+  id int [pk, increment]
+  article_id int [ref: > uni_donation.id]
+  trans_id_merchant varchar(255)
+  bill_number varchar(255)
+  transaction_id varchar(255)
+  transaction_user longtext
+  transaction_type varchar(255)
+  transaction_amount varchar(255)
+  transaction_date datetime
+  transaction_via varchar(50)
+  transaction_bank varchar(50)
+  transaction_status varchar(255)
+  user_name_title varchar(255)
+  user_name varchar(255)
+  user_email varchar(255)
+  user_phone varchar(255)
+  user_address text
+  user_ip_address text
+  utm_source varchar(255)
+  utm_medium varchar(255)
+  utm_content varchar(255)
+  utm_campaign varchar(255)
+  utm_term varchar(255)
+  email_transfer_notif int [not null]
+  email_init_notif int [not null]
+  email_rcrreg_notif int [not null]
+  email_success_notif int [not null]
+  card_type varchar(50)
+  is_delete int
+  is_pause int
+  is_gimmick int
+}
+
+Table web_xendit_callback {
+  id int [pk, increment]
+  invoice_id varchar(255)
+  external_id varchar(255)
+  user_id varchar(255)
+  recurring_payment_id varchar(255)
+  merchant varchar(255)
+  email varchar(255)
+  description varchar(255)
+  currency varchar(255)
+  amount varchar(255)
+  fees_paid_amount varchar(255)
+  adjusted_received_amount varchar(255)
+  paid_amount varchar(255)
+  status varchar(255)
+  bank_code varchar(255)
+  outlet_name varchar(255)
+  ewallet_type varchar(255)
+  credit_card varchar(255)
+  on_demand varchar(255)
+  recurring_id varchar(255)
+  payment_method varchar(255)
+  payment_channel varchar(255)
+  payment_destination varchar(255)
+  paid_at datetime [not null]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+  email_transfer_notif int [not null]
+  email_init_notif int [not null]
+  email_rcrreg_notif int [not null]
+}
+
+Table web_xendit_recurring {
+  id int [pk, increment]
+  payment_method_id varchar(255)
+  external_id varchar(255)
+  user_id varchar(255)
+  email varchar(255)
+  description varchar(255)
+  amount varchar(255)
+  status varchar(255)
+  invoice_duration varchar(255)
+  invoice_url varchar(255)
+  recurring_id varchar(255)
+  recurring_interval varchar(255)
+  recurring_count varchar(255)
+  recurring_recharge varchar(255)
+  recurring_progress varchar(255)
+  recurring_expire varchar(255)
+  started_at datetime [not null]
+  created_at datetime [not null]
+  updated_at datetime [not null]
+}

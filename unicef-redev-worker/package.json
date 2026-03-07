@@ -1,0 +1,35 @@
+{
+  "name": "unicef-redev-worker",
+  "version": "0.0.1",
+  "description": "UNICEF Donation Platform - Background Worker (cron + Bull). No HTTP.",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build",
+    "worker": "node dist/worker.js",
+    "worker:dev": "nest build --watch & node dist/worker.js",
+    "worker:prod": "node dist/worker.js",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push",
+    "lint": "eslint \"{src,test}/**/*.ts\" --fix"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/bull": "^11.0.0",
+    "@nestjs/schedule": "^6.0.0",
+    "@prisma/client": "^7.3.0",
+    "bull": "^4.12.0",
+    "ioredis": "^5.3.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@types/node": "^22.10.7",
+    "prisma": "^7.3.0",
+    "typescript": "^5.7.3"
+  }
+}
