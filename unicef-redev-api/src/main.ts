@@ -11,13 +11,16 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS for frontend
+  const allowedOrigins = [
+    process.env.CMS_URL,
+    process.env.WEB_URL,
+    process.env.DONOR_PORTAL_URL,
+    'http://localhost:5174',
+    'http://localhost:3000',
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: [
-      'http://localhost:5174', 'http://127.0.0.1:5174', // CMS (Vite)
-      'http://localhost:5173', 'http://127.0.0.1:5173',
-      'http://localhost:3000', 'http://127.0.0.1:3000',
-      'http://localhost:3001', 'http://127.0.0.1:3001', // Website / Donor Portal
-    ],
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
