@@ -17,7 +17,7 @@ async function bootstrap() {
     process.env.DONOR_PORTAL_URL,
     'http://localhost:5174',
     'http://localhost:3000',
-  ].filter(Boolean) as string[];
+  ].filter(Boolean).map(url => url!.replace(/\/$/, '')) as string[];
 
   app.enableCors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
