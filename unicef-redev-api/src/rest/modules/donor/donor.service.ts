@@ -38,7 +38,7 @@ export class DonorService {
     const [donationCount, totalDonated] = await Promise.all([
       this.prisma.uniTransaction.count({ where: donorWhere }),
       this.prisma.uniTransaction.aggregate({
-        where: { ...donorWhere, OR: [{ status: TX_STATUS.SUCCESS }, { status: TX_STATUS.ACTIVE }] },
+        where: { ...donorWhere, status: { in: [TX_STATUS.SUCCESS, TX_STATUS.ACTIVE] } },
         _sum: { amount: true },
       }),
     ]);
@@ -241,7 +241,7 @@ export class DonorService {
 
     const [totalDonated, totalTransactions, activeSubscriptions] = await Promise.all([
       this.prisma.uniTransaction.aggregate({
-        where: { ...donorWhere, OR: [{ status: TX_STATUS.SUCCESS }, { status: TX_STATUS.ACTIVE }] },
+        where: { ...donorWhere, status: { in: [TX_STATUS.SUCCESS, TX_STATUS.ACTIVE] } },
         _sum: { amount: true },
       }),
       this.prisma.uniTransaction.count({ where: donorWhere }),
