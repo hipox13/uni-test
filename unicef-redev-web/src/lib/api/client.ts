@@ -1,7 +1,8 @@
-const baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+const baseURL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
 export function getApiUrl(path: string) {
-  return `${baseURL}/api/v1${path}`;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseURL}/api/v1${cleanPath}`;
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
