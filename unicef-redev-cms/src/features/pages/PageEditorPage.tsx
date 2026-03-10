@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Save, Trash2, Loader2, Settings2, Globe, ExternalLink, Eye, History, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Loader2, Settings2, Globe, Eye, History, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermission } from '@/lib/auth/permissions';
 import type { Block } from '../editor/serializer';
