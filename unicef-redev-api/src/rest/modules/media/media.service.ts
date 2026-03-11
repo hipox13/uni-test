@@ -69,10 +69,27 @@ export class MediaService {
     const { width, format = 'webp', quality = 80 } = opts;
     let pipeline = sharp(buffer);
     const meta = await pipeline.metadata();
-    const targetWidth = width || (meta.width && meta.width > 2000 ? 2000 : undefined);
-    if (targetWidth) pipeline = pipeline.resize(targetWidth, null, { withoutEnlargement: true, fit: 'inside' });
-    pipeline = format === 'avif' ? pipeline.avif({ quality }) : pipeline.webp({ quality });
-    return { buffer: await pipeline.toBuffer(), extension: format, mimeType: `image/${format}` };
+    
+    const targetWidth = width && meta.width && meta.width > width ? width : undefined;
+    
+    if (targetWidth) {
+      pipeline = pipeline.resize(targetWidth, null, { 
+        withoutEnlargement: true, 
+        fit: 'inside' 
+      });
+    }
+
+    if (format === 'avif') {
+      pipeline = pipeline.avif({ quality, effort: 2 });
+    } else {
+      pipeline = pipeline.webp({ quality });
+    }
+
+    return { 
+      buffer: await pipeline.toBuffer(), 
+      extension: format, 
+      mimeType: `image/${format}` 
+    };
   }
 
   private buildWhere(query: MediaQueryDto) {
@@ -121,39 +138,79 @@ export class MediaService {
     let buffer = file.buffer;
     let mimeType = file.mimetype;
     let extension = path.extname(file.originalname).slice(1);
-    const metaData: any = {};
+    const metaData: any = { variants: {} };
 
     const isRasterImage = file.mimetype.startsWith('image/') && file.mimetype !== 'image/svg+xml';
+    
     if (isRasterImage) {
-      const optimized = await this.optimizeImage(file.buffer);
-      buffer = optimized.buffer;
-      mimeType = optimized.mimeType;
-      extension = optimized.extension;
-      fullPath = fullPath.replace(path.extname(fullPath), '.webp');
-      relativePath = relativePath.replace(path.extname(relativePath), '.webp');
+      // 1. Convert main image to WebP
+      const webpMain = await this.optimizeImage(file.buffer, { format: 'webp' });
+      const webpRelPath = relativePath.replace(path.extname(relativePath), '.webp');
+      fs.writeFileSync(path.join(this.uploadDir, webpRelPath), webpMain.buffer);
+      
+      relativePath = webpRelPath;
+      buffer = webpMain.buffer;
+      mimeType = webpMain.mimeType;
+      extension = webpMain.extension;
 
-      const thumb = await this.optimizeImage(file.buffer, { width: 300 });
-      const thumbRelPath = relativePath.replace('.webp', '-thumb.webp');
-      fs.writeFileSync(path.join(this.uploadDir, thumbRelPath), thumb.buffer);
-      metaData.thumbnail = thumbRelPath;
+      // 2. Asset Pipeline: Generate AVIF and various sizes
+      const sizes = [
+        { name: 'thumb', width: 300 },
+        { name: 'medium', width: 800 },
+        { name: 'large', width: 1600 }
+      ];
+      const formats: Array<'webp' | 'avif'> = ['webp', 'avif'];
+
+      for (const format of formats) {
+        metaData.variants[format] = {};
+        for (const size of sizes) {
+          const optimized = await this.optimizeImage(file.buffer, { 
+            width: size.width, 
+            format 
+          });
+          const variantRelPath = relativePath.replace('.webp', `-${size.name}.${format}`);
+          fs.writeFileSync(path.join(this.uploadDir, variantRelPath), optimized.buffer);
+          metaData.variants[format][size.name] = variantRelPath;
+        }
+        
+        if (format === 'avif') {
+          const mainAvif = await this.optimizeImage(file.buffer, { format: 'avif' });
+          const avifRelPath = relativePath.replace('.webp', '.avif');
+          fs.writeFileSync(path.join(this.uploadDir, avifRelPath), mainAvif.buffer);
+          metaData.variants.avif.main = avifRelPath;
+        }
+      }
+      
+      metaData.thumbnail = metaData.variants.webp.thumb;
+    } else {
+      fs.writeFileSync(fullPath, buffer);
     }
-
-    fs.writeFileSync(fullPath, buffer);
 
     const media = await this.prisma.uniMedia.create({
       data: {
-        name: relativePath, title: file.originalname, extension,
-        fileSize: buffer.length, mediaType: mimeType,
-        authorId: userId, datePosted: new Date(), status: 1,
-        labels: labels || null, metaData: JSON.stringify(metaData),
+        name: relativePath,
+        title: file.originalname,
+        extension,
+        fileSize: buffer.length,
+        mediaType: mimeType,
+        authorId: userId,
+        datePosted: new Date(),
+        status: 1,
+        labels: labels || null,
+        metaData: JSON.stringify(metaData),
       },
       include: WITH_AUTHOR,
     });
 
     return {
-      id: media.id, name: media.name, title: media.title,
-      url: `/uploads/${media.name}`, mediaType: media.mediaType,
-      fileSize: media.fileSize, extension: media.extension, datePosted: media.datePosted,
+      id: media.id,
+      name: media.name,
+      title: media.title,
+      url: `/uploads/${media.name}`,
+      mediaType: media.mediaType,
+      fileSize: media.fileSize,
+      extension: media.extension,
+      datePosted: media.datePosted,
     };
   }
 
@@ -170,12 +227,23 @@ export class MediaService {
   async remove(id: bigint) {
     const media = await this.findOne(id);
     if (media.name && !media.name.startsWith('http')) {
-      const filePath = path.join(this.uploadDir, media.name);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      const mainPath = path.join(this.uploadDir, media.name);
+      if (fs.existsSync(mainPath)) fs.unlinkSync(mainPath);
+      
       if (media.metaData) {
         try {
           const meta = JSON.parse(media.metaData);
-          if (meta.thumbnail) {
+          
+          if (meta.variants) {
+            Object.values(meta.variants).forEach((formatGroup: any) => {
+              Object.values(formatGroup).forEach((variantPath: any) => {
+                const p = path.join(this.uploadDir, variantPath);
+                if (fs.existsSync(p)) fs.unlinkSync(p);
+              });
+            });
+          }
+          
+          if (meta.thumbnail && !JSON.stringify(meta.variants || {}).includes(meta.thumbnail)) {
             const thumbPath = path.join(this.uploadDir, meta.thumbnail);
             if (fs.existsSync(thumbPath)) fs.unlinkSync(thumbPath);
           }
